@@ -101,9 +101,56 @@ var PROXY_URL = "";
 var TARGET = 80;   /* the ₹10,000 gate */
 var SPLIT  = 75;   /* the A/B track line — also the amber floor */
 
+/* ── WHO IS LOOKING? ─────────────────────────────────────────────────────────
+   This page cannot know which CSP tapped it. The id must arrive in the URL the
+   app opens (exactly like Kamai Kavach: /?cspId=a0b6f0). A bare link with no id
+   is NOT dynamic — it will show the "open it from the app" state.
+
+   To make the wiring impossible to get wrong, we accept the id in every shape:
+     1. ?cspId= / ?cspid= / ?csp_id= / ?id=      ← preferred, matches MBG
+     2. /wiom-sehat-mg/a0b6t9                    ← path style (via 404.html)
+     3. #a0b6t9  or  #cspId=a0b6t9               ← hash style
+     4. window.CSP_ID, or an Android/iOS bridge  ← native webview injection
+     5. sessionStorage                           ← remembered within the session
+   A CSP id looks like: a0b6t9  (letter + 5 alphanumerics).                    */
+var ID_RE = /^[a-z][a-z0-9]{4,9}$/;
+
 function cspIdFromUrl(){
+  var id = '';
+
+  // 1 · query string
   var q = new URLSearchParams(location.search);
-  return (q.get('cspId') || q.get('cspid') || q.get('csp_id') || q.get('id') || '').toLowerCase();
+  id = q.get('cspId') || q.get('cspid') || q.get('csp_id') || q.get('id') || '';
+
+  // 2 · hash — "#a0b6t9" or "#cspId=a0b6t9"
+  if (!id && location.hash){
+    var h = location.hash.slice(1);
+    id = h.indexOf('=') > -1 ? (new URLSearchParams(h).get('cspId') || '') : h;
+  }
+
+  // 3 · trailing path segment — /wiom-sehat-mg/a0b6t9  (404.html routes it here)
+  if (!id){
+    var seg = location.pathname.split('/').filter(Boolean).pop() || '';
+    if (seg && seg.indexOf('.') === -1 && ID_RE.test(seg.toLowerCase())) id = seg;
+  }
+
+  // 4 · injected by the native webview
+  if (!id){
+    try{
+      id = window.CSP_ID || window.cspId || '';
+      if (!id && window.Android && typeof window.Android.getCspId === 'function') id = window.Android.getCspId();
+    }catch(e){}
+  }
+
+  id = String(id || '').trim().toLowerCase();
+
+  // 5 · remember / recall within the session (survives in-app back-and-forth)
+  try{
+    if (id) sessionStorage.setItem('sehat_csp', id);
+    else    id = (sessionStorage.getItem('sehat_csp') || '').toLowerCase();
+  }catch(e){}
+
+  return ID_RE.test(id) ? id : '';
 }
 
 /* raw inputs only: {ok, all, sok, stot, cn, tr, op0} — every number on screen is derived */

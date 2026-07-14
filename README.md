@@ -9,17 +9,46 @@ Design system, card rhythm and copy register are inherited verbatim from
 
 ---
 
-## How it renders
+## ⚠️ How the app must open this page
 
-The page is opened with a CSP id and fetches that CSP's real numbers:
+**A bare link does not become dynamic on its own.**
+
+```
+https://vikaswiom.github.io/wiom-sehat-mg              ❌ page cannot know who tapped it
+https://vikaswiom.github.io/wiom-sehat-mg/?cspId=a0b6t9  ✅
+```
+
+The page has no way to identify the viewer — it can only read an id that is **already in the URL it
+was opened with**. Whatever the app / CleverTap campaign does today to build the Kamai Kavach link
+(`?cspId=a0b6f0`), it must do the same here. In a CleverTap campaign that is the profile token:
+
+```
+https://vikaswiom.github.io/wiom-sehat-mg/?cspId={{Profile.cspid}}
+```
+
+Opened with no id, the page shows a calm *"ये पेज आपकी CSP ID के साथ खुलता है"* state — it never
+invents a number.
+
+**To make the wiring impossible to get wrong, the id is accepted in any of these shapes:**
+
+| # | Shape | Example |
+|---|---|---|
+| 1 | Query string *(preferred — matches MBG)* | `/?cspId=a0b6t9` · also `cspid`, `csp_id`, `id`, any casing |
+| 2 | Path segment | `/wiom-sehat-mg/a0b6t9` (routed by `404.html`) |
+| 3 | Hash | `/#a0b6t9` or `/#cspId=a0b6t9` |
+| 4 | Native webview injection | `window.CSP_ID`, `window.cspId`, or `Android.getCspId()` |
+| 5 | Session memory | remembered in `sessionStorage` across in-app navigation |
+
+Anything that doesn't look like a CSP id (`^[a-z][a-z0-9]{4,9}$`) is ignored.
+
+## How it renders
 
 ```
 /?cspId=a0b6t9      →  Track A · Optical Power 49%  (1,683 of 3,450 pings OK)
 /?cspId=a0a6y4      →  Track B · समय पर समाधान 86%  (165 of 191 within 4h)
 ```
 
-Accepts `cspId`, `cspid`, `csp_id` or `id`, any casing. Unknown id → a calm
-"आपका हिसाब अभी तैयार नहीं है" state, never a fabricated number.
+A CSP id that isn't in `data.json` → *"आपका हिसाब अभी तैयार नहीं है"*, never a fabricated number.
 
 A CSP is on **exactly one track**, decided **only** by their Optical Power at month start, and the track is **locked for the month**:
 
