@@ -1,99 +1,117 @@
 # सेहत गारंटी — Sehat MG (Quality MG)
 
-CSP-facing screen for **Sehat MG**: the ₹10,000/month guarantee for the **99 active CSPs who are not eligible for Install MG**. They earn it by keeping their **network healthy** instead of by installing connections.
+The CSP-facing screen for **Sehat MG**: the ₹10,000/month guarantee for active CSPs who are **not eligible for Install MG**. They earn it by keeping their **network healthy** instead of by installing connections.
 
-**Live:** https://vikaswiom.github.io/wiom-sehat-mg/
+**Live:** https://vikaswiom.github.io/wiom-sehat-mg/?cspId=a0b6t9
 
 Design system, card rhythm and copy register are inherited verbatim from
-[wiom-mbg-kamai-kavach](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/) — same tokens, same
-maroon header, same `.card` → bar-with-marker → yellow action card → purple guarantee card stack.
+[wiom-mbg-kamai-kavach](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/).
 
 ---
 
-## The program in one line
+## How it renders
 
-A CSP is put on **exactly one track**, decided **only** by their current Optical Power, and the track is **locked for the month**:
+The page is opened with a CSP id and fetches that CSP's real numbers:
+
+```
+/?cspId=a0b6t9      →  Track A · Optical Power 49%  (1,683 of 3,450 pings OK)
+/?cspId=a0a6y4      →  Track B · समय पर समाधान 86%  (165 of 191 within 4h)
+```
+
+Accepts `cspId`, `cspid`, `csp_id` or `id`, any casing. Unknown id → a calm
+"आपका हिसाब अभी तैयार नहीं है" state, never a fabricated number.
+
+A CSP is on **exactly one track**, decided **only** by their Optical Power at month start, and the track is **locked for the month**:
 
 | | **Track A — इलाज** | **Track B — फिट रखना** |
 |---|---|---|
 | Assigned if | Optical Power **< 75%** | Optical Power **≥ 75%** |
-| Graded on | Optical Power **≥ 80%** | समय पर समाधान (Service SLA) **≥ 80%** |
+| Graded on | Optical Power **≥ 80%** | समय पर समाधान **≥ 80%** |
 | The other metric | **ignored** | **ignored** |
 
-Payout is **binary** — ₹10,000 or ₹0 — paid **Day-1 of the next month**, in the same run as Install MG.
-There is no downside: install/service earnings are untouched.
+Payout is **binary** — ₹10,000 or ₹0 — paid **Day-1 of the next month**, same run as Install MG.
+No downside: install and service earnings are untouched. The screen says all of this out loud,
+because "only one number counts" is the single most confusable thing about the program.
 
-## URL contract
+RAG: **🟢 ≥80 · 🟠 75–79 · 🔴 <75**
 
-Same as the Kamai Kavach page:
+---
 
-- `?cspId=a0b6t9` — render that CSP
-- `?case=b_red` — render a specific state
+## ⚠️ The formula in the program note is inverted
 
-Case keys: `a_red · a_amber · a_green · b_red · b_amber · b_green · unclass · offered · pass · miss`
+`SEHAT_MG_LOGIC.md` states `% Optical Power = 100 − T1_OOR_RATE`. **That is backwards.**
 
-## The 10 states
+```
+% Optical Power = OPTICAL_NUMERATOR / OPTICAL_DENOMINATOR      ← share of IN-RANGE pings
+                = T1_OOR_RATE                                   (NOT 100 − T1_OOR_RATE)
+```
 
-| # | State | Shown |
-|---|---|---|
-| 1 | Track A · 🔴 | OP < 75% — weak-connection list, gap to 80 |
-| 2 | Track A · 🟠 | OP 75–79% — "बस X% और" |
-| 3 | Track A · 🟢 | OP ≥ 80% — "80% पूरा · ₹10,000 पक्का" |
-| 4 | Track B · 🔴 | SLA < 75% — open tickets, 4-hr clock |
-| 5 | Track B · 🟠 | SLA 75–79% |
-| 6 | Track B · 🟢 | SLA ≥ 80% |
-| 7 | Unclassified | no telemetry (Tirth Digital) → SLA-only default |
-| 8 | Offered | pre-enroll opt-in, single accept |
-| 9 | Month-end pass | celebration |
-| 10 | Month-end miss | honest, no blame, install pay safe |
+`T1_OOR_RATE` is an **OK-rate despite its name**. The proof is the service's own banding:
 
-RAG bands: **🟢 ≥80 · 🟠 75–79 · 🔴 <75**
+| Band | `T1_OOR_RATE` range | | Band | `T2_SPEED_OK_RATE` range |
+|---|---|---|---|---|
+| VG | 95.1 – 100 | | VG | 90 – 100 |
+| GOOD | 90 – 94.9 | | GOOD | 85.1 – 89.9 |
+| BASE | below | | BASE | below |
+
+T1 bands **identically to T2**, and `T2_SPEED_OK_RATE` is unambiguously "higher is better".
+If T1 really were an out-of-range rate, the service would be calling *95–100% of pings out of range*
+"very good", which is nonsense.
+
+**Why the note got it wrong:** its `[VERIFIED]` proof used `a0b6t9`, which sits at ~49% — the one
+place on the scale where an inversion is nearly invisible (48.65 vs 51.35 both look plausible).
+
+**What it costs if you ship the inverted version:** median Optical Power reads as 24% instead of 76%,
+and **986 of 1,053 CSPs** get dumped into Track A. With the correct formula the split is **485 A /
+513 B / 55 unclassified** — near-even, which is exactly the character the note's own cohort shows
+(50 A / 48 B). That corroboration is the second, independent check.
+
+---
 
 ## Data
 
-Both metrics come from `PROD_DB.CSP_QUALITY_SERVICE_CSP_QUALITY_SERVICE` — the same engine the CSP
-app's **सेवा स्थिति** screen reads.
-
 | Field | Source | Formula / window |
 |---|---|---|
-| % Optical Power | `TELEMETRY_ROLLUP_RECORDS` | `100 − SUM(OPTICAL_NUMERATOR)/SUM(OPTICAL_DENOMINATOR)×100` · rolling **15** telemetry days (T1) |
-| % समय पर समाधान | `COMPLAINT_RESOLUTION_LEDGER` | `COUNT_IF(RESOLVED_WITHIN_TAT)/COUNT(*)×100` · `TAT_WINDOW_HOURS = 4` · **60**-day lookback (M3) |
-| Track A/B | OP snapshot — Metabase card **11616** | OP < 75 → A · OP ≥ 75 → B |
-| Weak-connection list | OOR daily GSheet · `HOURLY_DEVICE_PING_INFLUX` | hourly, per-customer — **action list only, not the grade** |
-| What the app shows | `DAILY_METRIC_SNAPSHOTS` | `T1_OOR_RATE`, `M3_TAT_PASS_RATE`, `LOOKBACK_*` |
+| % Optical Power | `TELEMETRY_ROLLUP_RECORDS` | `SUM(OPTICAL_NUMERATOR)/SUM(OPTICAL_DENOMINATOR)×100` · rolling **15** telemetry days (T1) |
+| % समय पर समाधान | `COMPLAINT_RESOLUTION_LEDGER` | `COUNT_IF(RESOLVED_WITHIN_TAT)/COUNT(*)×100` · `TAT_WINDOW_HOURS = 4` · each CSP's own **60**-day snapshot lookback (M3) |
+| Track A/B/U | `DAILY_METRIC_SNAPSHOTS` | Optical Power on the **1st of the month** · <75 → A · ≥75 → B · no telemetry → U |
+| Active connections | `DAILY_METRIC_SNAPSHOTS` | `ACTIVE_CONNECTION_COUNT` |
 
-App-exact cohort card: **11615** — *"Priority CSPs — % OOR (T1) & % Resolve On Time (M3)"*, collection 1331.
+All in `PROD_DB.CSP_QUALITY_SERVICE_CSP_QUALITY_SERVICE` — the same engine the CSP app's
+**सेवा स्थिति** screen reads. Recomputed from source (not read off the snapshot) so the screen can
+show each CSP the same numerator/denominator their ₹10,000 is graded on. Agreement with the
+snapshot: mean |diff| **0.29 pt**, within 0.5 pt for **866/997** CSPs.
 
-> **Only `a0b6t9` carries real, verified numbers** (1675/3443 pings → OP 51.35%; 186/206 complaints →
-> SLA 90.29%, both reproduced to the decimal against the app). Every other CSP on the case switcher is
-> **illustrative sample data** — each case note says which is which. Wire `data.json` / a live proxy
-> before this goes in front of CSPs.
+### Refresh
 
-## Going live
-
-The page computes everything client-side from a `CASES` object. To go live, replace it the same way
-the MBG page does: fetch a per-CSP snapshot (`data.json`, or a proxy that queries Metabase per tap),
-keyed on `cspId`. Nothing else in the screen changes.
-
-CleverTap poller tokens (identity = `cspid`, capital `Profile`, inline-only):
-
-```
-sehat_tagline · sehat_metric_label · sehat_value · sehat_barpct
-sehat_rag_text · sehat_rag_color · sehat_rag_bg · sehat_gap_text
-sehat_days · sehat_action_text · sehat_delay_text · sehat_track_task
+```bash
+python refresh.py      # runs query.sql → writes data.json   (needs C:\credentials\.env)
 ```
 
-## Open decisions (before launch)
+`data.json` = `{meta, data: {"<cspId>": {ok, all, sok, stot, cn, tr, op0}}}` — **raw inputs only**,
+77 KB, 1,053 CSPs. Every displayed number (%, gap to 80, bar width, RAG) is derived client-side,
+so there is no second place for the formula to drift.
+
+**Going live per tap:** set `PROXY_URL` in `index.html` to an Apps Script `/exec` that queries
+Metabase for the requested `cspId`. It returns the same raw shape; nothing else changes.
+
+---
+
+## Known gaps
 
 1. **The graded window is not the window the screen shows.** Payout grades on a month-end window
-   (OP = last 5 days, SLA = last 15-day average); the app shows the quality-service rolling numbers
-   (15-day OP, 60-day SLA). A CSP must not be graded on a number the app never displayed — align the
-   two, or say so on the screen.
-2. **75% split vs 80% target.** A CSP at OP 76% lands in Track B and can win ₹10,000 on SLA alone,
+   (OP = last 5 days, SLA = last 15-day average); the screen shows the quality-service rolling
+   numbers (15-day OP, 60-day SLA). A CSP must not be graded on a number the app never displayed —
+   align the two, or state it on the screen.
+2. **No live open-ticket feed.** Every unresolved row in `COMPLAINT_RESOLUTION_LEDGER` is **7+ days
+   old** (567 aged 7–30d, 432 over 30d, **zero** under 24h), so those are stale hygiene artifacts,
+   not a work queue. Track B's action card is therefore built on the real breach count, not a fake
+   4-hour countdown. A genuine open-ticket list needs the ops ticketing system.
+3. **75% split vs 80% target.** A CSP at OP 76% lands in Track B and can bank ₹10,000 on SLA alone
    while their optical never reaches 80%. Confirm this is intended.
-3. **Payout source of truth** — spec says OSS/NMS + ticketing; what is live and reproducible is
+4. **Payout source of truth** — the note says OSS/NMS + ticketing; what is live and reproducible is
    `CSP_QUALITY_SERVICE`. Pick one.
-4. **Card 11615 vs 11616** — confirm the single canonical cohort/track card.
-5. **Tirth Digital** (no telemetry, 221 customers) — SLA-only default (as rendered) or manual.
-6. **Deep-link** — the CTA lands on HOME only; the tappable ONT/ticket screen is a Phase-2 app build
-   (`CI_BANNER` route reserved, not wired).
+5. **55 CSPs have no optical telemetry** and cannot be track-assigned. They currently default to
+   SLA-only (Track B). Confirm, or handle manually.
+6. **Enrollment** is not wired — the screen assumes the CSP is already in. Reuse the Install-MG
+   single-accept flow.
