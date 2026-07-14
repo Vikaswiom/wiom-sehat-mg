@@ -1,0 +1,605 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="Sehat MG (Quality MG) — CSP-facing screen. Track A Ilaaj / Track B Fit rakhna, Rs.10,000 guarantee."><title>सेहत गारंटी — Sehat MG</title>
+<style>
+/* ============================================================================
+   TOKENS — inherited verbatim from wiom-mbg-kamai-kavach (do not re-pick).
+   Only NEW tokens for the Sehat-specific surfaces are added at the end.
+   ============================================================================ */
+:root{
+  --maroon:#3f2a44; --purple:#6D17CE; --purpbg:#F4EBFC; --pill:#EBDDFB;
+  --green:#008043; --green-bg:#E6F6EE; --amber:#B85C00; --amberbar:#E08A1E;
+  --red:#D9202F; --yellow:#FFF6DA; --yellowline:#F2D98A; --text:#181022;
+  --t2:#6b6478; --t3:#a8a2b4; --card:#fff; --screen:#F7F5FA; --line:#ECE7F2; --stroke2:#DED8EA;
+  /* new — Sehat only */
+  --teal:#0E6E6E; --tealbg:#E6F2F2; --tealline:#CFE4E4;
+  /* studio chrome (outside the phone) — theme-aware */
+  --stage:#EFECF3; --stage-ink:#2b2337; --stage-t2:#6b6478; --stage-card:#fff; --stage-line:#DED8EA;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --stage:#17131F; --stage-ink:#EDE8F4; --stage-t2:#A79FB5; --stage-card:#1F1929; --stage-line:#332A42; }
+}
+:root[data-theme="dark"]{ --stage:#17131F; --stage-ink:#EDE8F4; --stage-t2:#A79FB5; --stage-card:#1F1929; --stage-line:#332A42; }
+:root[data-theme="light"]{ --stage:#EFECF3; --stage-ink:#2b2337; --stage-t2:#6b6478; --stage-card:#fff; --stage-line:#DED8EA; }
+
+*{box-sizing:border-box;margin:0;font-family:"Noto Sans Devanagari","Nirmala UI","Segoe UI",system-ui,sans-serif;}
+body{background:var(--stage);color:var(--stage-ink);}
+
+/* ---------- studio chrome ---------- */
+.stage{max-width:960px;margin:0 auto;padding:18px 14px 40px;display:flex;flex-direction:column;gap:16px;}
+.stage-hd{display:flex;flex-wrap:wrap;align-items:baseline;gap:8px;}
+.stage-hd h1{font-size:17px;font-weight:800;letter-spacing:-.2px;}
+.stage-hd .sub{font-size:12.5px;color:var(--stage-t2);font-weight:600;}
+.switch{display:flex;flex-wrap:wrap;gap:6px;}
+.switch button{font-size:11.5px;font-weight:700;padding:6px 11px;border-radius:999px;cursor:pointer;
+  background:var(--stage-card);color:var(--stage-t2);border:1px solid var(--stage-line);transition:.15s;}
+.switch button:hover{border-color:var(--purple);color:var(--purple);}
+.switch button:focus-visible{outline:2px solid var(--purple);outline-offset:2px;}
+.switch button[aria-pressed="true"]{background:var(--purple);border-color:var(--purple);color:#fff;}
+.stage-note{font-size:11.5px;color:var(--stage-t2);line-height:1.6;}
+.stage-note b{color:var(--stage-ink);}
+
+/* ---------- the screen (430px, MBG geometry) ---------- */
+.wrap{background:var(--screen);color:var(--text);width:100%;max-width:430px;margin:0 auto;
+  border-radius:18px;overflow:hidden;border:1px solid var(--stage-line);box-shadow:0 10px 34px rgba(24,16,34,.10);}
+.hdr{background:var(--maroon);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:11px;}
+.hdr .t{font-size:15.5px;font-weight:700;flex:1;}
+.hdr .tag{font-size:10px;font-weight:700;color:#d9c6de;}
+.subhdr{background:var(--maroon);color:#e8dcec;padding:0 15px 11px;display:flex;justify-content:space-between;font-size:12px;font-weight:600;}
+.body{padding:13px;display:flex;flex-direction:column;gap:11px;}
+.card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;}
+.k{font-size:12px;color:var(--t2);font-weight:600;}
+.krow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.trackpill{font-size:10px;font-weight:800;color:var(--purple);background:var(--pill);padding:3px 9px;border-radius:999px;white-space:nowrap;}
+.earn-amt{font-size:30px;font-weight:800;letter-spacing:-1px;margin:5px 0 3px;font-variant-numeric:tabular-nums;}
+.earn-sub{font-size:11.5px;color:var(--green);font-weight:700;line-height:1.5;}
+
+.wyh-top{display:flex;align-items:baseline;gap:7px;margin:5px 0 2px;}
+.wyh-pct{font-size:31px;font-weight:800;letter-spacing:-1.5px;font-variant-numeric:tabular-nums;}
+.wyh-need80{font-size:12.5px;color:var(--t3);font-weight:700;}
+.bar{position:relative;height:11px;background:#EDEAF2;border-radius:6px;margin:12px 0 4px;}
+.bar .fill{position:absolute;left:0;top:0;bottom:0;border-radius:6px;transition:width .7s;}
+.bar .mk{position:absolute;left:80%;top:-4px;bottom:-4px;width:2px;background:#2a2130;}
+.wyh-need{font-size:14px;font-weight:800;margin-top:9px;}
+.wyh-line{font-size:11.5px;color:var(--t2);line-height:1.5;margin-top:3px;}
+.f-green .wyh-pct{color:var(--green)}.f-green .fill{background:var(--green)}.f-green .wyh-need{color:var(--green)}
+.f-amber .wyh-pct{color:var(--amber)}.f-amber .fill{background:var(--amberbar)}.f-amber .wyh-need{color:var(--amber)}
+.f-red   .wyh-pct{color:var(--red)}  .f-red   .fill{background:var(--red)}  .f-red   .wyh-need{color:var(--red)}
+.f-idle  .wyh-pct{color:var(--t2)}   .f-idle  .fill{background:var(--stroke2)}
+
+.act{background:var(--yellow);border:1px solid var(--yellowline);border-radius:15px;padding:13px;}
+.act .h{font-size:14px;font-weight:800;color:#7a4a00;}
+.act .s{font-size:11.5px;color:#8a6a30;font-weight:600;margin:8px 0 8px;}
+.tkt{background:#fff;border:1px solid #efe3c4;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;}
+.tkt .tn{font-size:12.5px;font-weight:700;}
+.tkt .tc{font-size:11px;font-weight:800;color:var(--purple);white-space:nowrap;}
+.tkt .tc.warn{color:var(--red);}
+.act .foot-s{font-size:11px;color:#8a6a30;font-weight:600;line-height:1.5;}
+
+/* delay disclosure — the trust note */
+.wait{background:var(--tealbg);border:1px solid var(--tealline);border-radius:15px;padding:12px 13px;display:flex;gap:9px;}
+.wait .ic{font-size:15px;line-height:1.2;}
+.wait .h{font-size:12.5px;font-weight:800;color:var(--teal);}
+.wait .s{font-size:11.5px;color:#3c5c5c;font-weight:600;line-height:1.55;margin-top:3px;}
+
+.prot{background:var(--purpbg);border:1px solid #e6d6fa;border-radius:16px;padding:14px;}
+.prot .ph{font-size:12.5px;font-weight:800;color:var(--purple);}
+.prot .big{font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-1px;margin:6px 0 2px;}
+.prot .big span{font-size:13px;font-weight:700;color:#4a2a86;}
+.prot .when{font-size:11.5px;font-weight:800;color:#4a2a86;margin:8px 0 8px;}
+.cond{background:#fff;border:1px solid #ecdefb;border-radius:11px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;}
+.cond .cl{font-size:12px;font-weight:700;display:flex;gap:7px;align-items:center;line-height:1.4;}
+.cond .cl .em{font-size:14px;flex:none;}
+.cond .cp{font-size:10px;font-weight:800;color:var(--purple);background:var(--pill);padding:3px 9px;border-radius:999px;white-space:nowrap;flex:none;}
+.prot .sb{font-size:11.5px;font-weight:800;color:#3a1a70;margin:9px 0 4px;}
+.prot .li{font-size:11.5px;color:#5a4a86;line-height:1.7;}
+
+/* education — सीखें */
+.edu{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px 14px 5px;}
+.edu .eh{font-size:14px;font-weight:800;}
+.edu .es{font-size:11.5px;color:var(--t2);font-weight:600;margin:3px 0 10px;line-height:1.5;}
+.edu details{border-top:1px solid var(--line);}
+.edu details summary{list-style:none;cursor:pointer;padding:11px 0;font-size:12.5px;font-weight:700;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.edu details summary::-webkit-details-marker{display:none;}
+.edu details summary:focus-visible{outline:2px solid var(--purple);outline-offset:2px;border-radius:6px;}
+.edu details summary .cv{color:var(--purple);font-weight:800;font-size:15px;flex:none;transition:transform .2s;}
+.edu details[open] summary .cv{transform:rotate(45deg);}
+.edu .ans{font-size:12px;color:var(--t2);line-height:1.75;padding:0 0 12px;}
+.edu .ans b{color:var(--text);}
+.edu .steps{display:flex;flex-direction:column;gap:7px;padding:2px 0 12px;}
+.step{display:flex;gap:9px;align-items:flex-start;}
+.step .n{flex:none;width:19px;height:19px;border-radius:6px;background:var(--pill);color:var(--purple);
+  font-size:10.5px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px;}
+.step .st{font-size:12px;line-height:1.55;font-weight:600;}
+.step .st em{font-style:normal;color:var(--t2);font-weight:600;}
+
+/* opt-in */
+.cta{width:100%;background:var(--purple);color:#fff;border:0;border-radius:12px;padding:14px;
+  font-size:14px;font-weight:800;cursor:pointer;transition:.15s;}
+.cta:hover{background:#5a12ad;}
+.cta:focus-visible{outline:2px solid var(--maroon);outline-offset:2px;}
+.cta.done{background:var(--green-bg);color:var(--green);cursor:default;}
+.cta-s{font-size:11px;color:var(--t3);text-align:center;font-weight:600;margin-top:-3px;}
+
+/* celebrate / miss */
+.win{background:var(--green-bg);border:1px solid #BFE6D2;border-radius:15px;padding:16px;text-align:center;}
+.win .em{font-size:26px;}
+.win .h{font-size:19px;font-weight:800;color:var(--green);margin-top:5px;letter-spacing:-.4px;}
+.win .s{font-size:12px;color:#2b6b4c;font-weight:600;line-height:1.6;margin-top:5px;}
+.foot{font-size:11px;color:var(--t3);text-align:center;padding:2px 6px 14px;line-height:1.5;}
+
+/* ---------- handoff ---------- */
+.hand{background:var(--stage-card);border:1px solid var(--stage-line);border-radius:14px;padding:16px 18px;}
+.hand h2{font-size:13.5px;font-weight:800;letter-spacing:-.1px;}
+.hand h3{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.9px;color:var(--stage-t2);margin:16px 0 7px;}
+.hand p,.hand li{font-size:12.5px;line-height:1.65;color:var(--stage-t2);}
+.hand li{margin-bottom:4px;}
+.hand ul,.hand ol{padding-left:18px;}
+.hand b,.hand strong{color:var(--stage-ink);font-weight:700;}
+.hand code{font-family:"Cascadia Mono",Consolas,ui-monospace,monospace;font-size:11px;
+  background:rgba(109,23,206,.09);color:var(--purple);padding:1px 5px;border-radius:4px;}
+.tbl-scroll{overflow-x:auto;margin-top:6px;}
+table{border-collapse:collapse;width:100%;min-width:520px;}
+th,td{text-align:left;padding:7px 10px;font-size:12px;border-bottom:1px solid var(--stage-line);vertical-align:top;}
+th{font-size:10.5px;text-transform:uppercase;letter-spacing:.7px;color:var(--stage-t2);font-weight:800;}
+td{color:var(--stage-t2);}
+td:first-child{color:var(--stage-ink);font-weight:700;white-space:nowrap;}
+.flag{color:#B85C00;font-weight:700;}
+@media (prefers-reduced-motion:reduce){*{transition:none !important;}}
+</style>
+
+</head>
+<body>
+<div class="stage">
+  <div class="stage-hd">
+    <h1>सेहत गारंटी — CSP screen</h1>
+    <span class="sub">Sehat MG · 99 CSPs · design system inherited from Kamai Kavach</span>
+  </div>
+
+  <div class="switch" id="switch" role="group" aria-label="केस चुनें"></div>
+  <div class="stage-note" id="caseNote"></div>
+
+  <!-- ===================== THE SCREEN ===================== -->
+  <div class="wrap">
+    <div class="hdr">
+      <span class="t">सेहत गारंटी</span>
+      <span class="tag" id="v_id">—</span>
+    </div>
+    <div class="subhdr">
+      <span><span id="v_month">—</span> का हिसाब</span>
+      <span>इस महीने <span id="v_days">0</span> दिन बाकी</span>
+    </div>
+
+    <div class="body">
+
+      <!-- 1 · the money, first -->
+      <div class="card" id="c_money">
+        <div class="k" id="v_moneyk">आपकी गारंटी — इस महीने</div>
+        <div class="earn-amt" id="v_money">₹10,000</div>
+        <div class="earn-sub" id="v_moneysub">—</div>
+      </div>
+
+      <!-- 2 · where you are -->
+      <div class="card f-red" id="c_where">
+        <div class="krow">
+          <span class="k">आप कहाँ हैं</span>
+          <span class="trackpill" id="v_track">—</span>
+        </div>
+        <div class="wyh-top">
+          <span class="wyh-pct"><span id="v_pct">0</span><span id="v_sign">%</span></span>
+          <span class="wyh-need80" id="v_need80">/ 80% चाहिए</span>
+        </div>
+        <div class="bar"><div class="fill" id="v_fill" style="width:0%"></div><div class="mk"></div></div>
+        <div class="wyh-need" id="v_needline">—</div>
+        <div class="wyh-line" id="v_subline">—</div>
+      </div>
+
+      <!-- 2b · month-end verdict (pass/miss cases only) -->
+      <div class="win" id="c_win" style="display:none">
+        <div class="em" id="v_winem">🎉</div>
+        <div class="h" id="v_winh">—</div>
+        <div class="s" id="v_wins">—</div>
+      </div>
+
+      <!-- 3 · today's action -->
+      <div class="act" id="c_act">
+        <div class="h" id="v_acth">—</div>
+        <div class="s" id="v_acts">—</div>
+        <div id="v_rows"></div>
+        <div class="foot-s" id="v_actfoot">—</div>
+      </div>
+
+      <!-- 4 · delay disclosure -->
+      <div class="wait" id="c_wait">
+        <span class="ic">⏱</span>
+        <div>
+          <div class="h" id="v_waith">—</div>
+          <div class="s" id="v_waits">—</div>
+        </div>
+      </div>
+
+      <!-- 5 · the guarantee -->
+      <div class="prot" id="c_guar">
+        <div class="ph">🛡 आपकी सुरक्षा</div>
+        <div class="big">₹10,000 <span>पूरे — एक ही शर्त पर</span></div>
+        <div class="when" id="v_when">कब मिलेगा?</div>
+        <div class="cond">
+          <div class="cl"><span class="em" id="v_c1em">🩺</span><span id="v_c1">—</span></div>
+          <span class="cp">आपका वादा</span>
+        </div>
+        <div class="cond">
+          <div class="cl"><span class="em">🤝</span><span>अगले महीने 1 तारीख को ₹10,000 आपके खाते में</span></div>
+          <span class="cp">व्योम का वादा</span>
+        </div>
+        <div class="sb">साफ़ बात</div>
+        <div class="li" id="v_fine">—</div>
+      </div>
+
+      <!-- 6 · educate -->
+      <div class="edu" id="c_edu">
+        <div class="eh">📚 समझ लीजिए — 2 मिनट</div>
+        <div class="es" id="v_edus">—</div>
+        <div id="v_faq"></div>
+      </div>
+
+      <!-- 7 · opt-in (offered case only) -->
+      <div id="c_optin" style="display:none;display:flex;flex-direction:column;gap:7px">
+        <button class="cta" id="v_cta" type="button">हाँ, मैं तैयार हूँ — शुरू करें</button>
+        <div class="cta-s">एक बार हाँ करें — हर महीने अपने आप चलेगा</div>
+      </div>
+
+      <div class="foot" id="v_foot">—</div>
+    </div>
+  </div>
+
+  <!-- ===================== HANDOFF ===================== -->
+  <div class="hand">
+    <h2>Handoff — क्या किस से भरता है</h2>
+    <p style="margin-top:6px">हर screen field का source. दोनों metric <code>PROD_DB.CSP_QUALITY_SERVICE_CSP_QUALITY_SERVICE</code> से आते हैं — वही engine जो app की <b>सेवा स्थिति</b> screen पढ़ती है.</p>
+
+    <h3>Field → source</h3>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Screen field</th><th>Source</th><th>Formula / window</th></tr></thead>
+        <tbody>
+          <tr><td>% Optical Power</td><td><code>TELEMETRY_ROLLUP_RECORDS</code></td><td>100 − SUM(OPTICAL_NUMERATOR)/SUM(OPTICAL_DENOMINATOR)×100 · rolling 15 telemetry days (T1)</td></tr>
+          <tr><td>% समय पर समाधान</td><td><code>COMPLAINT_RESOLUTION_LEDGER</code></td><td>COUNT_IF(RESOLVED_WITHIN_TAT)/COUNT(*)×100 · TAT_WINDOW_HOURS = 4 · 60-day lookback (M3)</td></tr>
+          <tr><td>Track (A / B)</td><td>OP snapshot, card <b>11616</b></td><td>OP &lt; 75% → Track A · OP ≥ 75% → Track B. महीने भर के लिए lock.</td></tr>
+          <tr><td>कमज़ोर connection list</td><td>OOR daily GSheet · <code>HOURLY_DEVICE_PING_INFLUX</code></td><td><span class="flag">अलग basis</span> — hourly, per-customer. Action list के लिए, grade के लिए नहीं.</td></tr>
+          <tr><td>खुले ticket</td><td>open <code>SERVICE_ISSUE</code> rows</td><td>आज के unresolved tickets</td></tr>
+          <tr><td>App जो दिखाती है</td><td><code>DAILY_METRIC_SNAPSHOTS</code></td><td><code>T1_OOR_RATE</code>, <code>M3_TAT_PASS_RATE</code>, <code>LOOKBACK_*</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>Poller tokens → screen</h3>
+    <p>CleverTap poller <code>cspid</code> identity पर लिखता है; HTML में capital <code>Profile</code>, inline-only: <code>{{ Profile.sehat_value | default:"—" }}</code>.</p>
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr><th>Token</th><th>भरता है</th></tr></thead>
+        <tbody>
+          <tr><td>sehat_metric_label</td><td>"Optical Power" / "समय पर समाधान"</td></tr>
+          <tr><td>sehat_value · sehat_barpct</td><td>बड़ा %, और bar की चौड़ाई</td></tr>
+          <tr><td>sehat_rag_text · _color · _bg</td><td>RAG band — 🟢 ≥80 · 🟠 75–79 · 🔴 &lt;75</td></tr>
+          <tr><td>sehat_gap_text</td><td>"बस 3% और" / "✓ 80% पूरा"</td></tr>
+          <tr><td>sehat_action_text</td><td>पीले card की एक line</td></tr>
+          <tr><td>sehat_delay_text</td><td>⏱ वाली trust line</td></tr>
+          <tr><td>sehat_days · sehat_tagline · sehat_track_task</td><td>header, opt-in</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <h3>ये launch से पहले तय करना है</h3>
+    <ul>
+      <li><b class="flag">Grade का window ≠ जो screen दिखाती है.</b> Payout month-end पर (OP = आख़िरी 5 दिन, SLA = आख़िरी 15 दिन का average), पर app rolling 15-day OP / 60-day SLA दिखाती है. CSP को उस number पर grade मत कीजिए जो उसने कभी देखा ही नहीं — या दोनों को align करें, या screen पर साफ़ लिखें.</li>
+      <li><b class="flag">75% का split बनाम 80% का target.</b> OP 76% वाला CSP Track B में जाकर सिर्फ़ SLA से ₹10,000 ले जाएगा — optical कभी 80% नहीं छुएगा.</li>
+      <li><b class="flag">Payout का source of truth.</b> Spec कहता है OSS/NMS + ticketing; live और reproducible है <code>CSP_QUALITY_SERVICE</code>. एक चुनिए.</li>
+      <li><b class="flag">Deep-link.</b> V1 में "अभी देखें" सिर्फ़ HOME पर उतरता है — tappable ONT/ticket screen Phase-2 app build है (<code>CI_BANNER</code> route reserved).</li>
+      <li><b class="flag">Tirth Digital</b> (कोई telemetry नहीं, 221 ग्राहक) — SLA-only default (नीचे यही दिखाया है) या manual.</li>
+    </ul>
+  </div>
+</div>
+
+<script>
+/* ============================================================================
+   सिर्फ़ a0b6t9 के number VERIFIED हैं (card 11615 / app-exact).
+   बाकी CSP illustrative हैं — हर case का बैज ऊपर बताता है कि कौन सा क्या है.
+   ============================================================================ */
+var CASES = {
+  a_red: {
+    label:"A · 🔴", note:'<b>Case 1 — Track A, Red.</b> a0b6t9 (SHRI SHYAM JI) — <b>असली, verified data</b>: 3,443 में से 1,675 ping range से बाहर = 48.65% OOR → Optical Power 51.35%. Track A क्योंकि OP &lt; 75%. SLA 90.3% अच्छा है पर इस महीने <b>गिना नहीं जाएगा</b>.',
+    id:"a0b6t9", track:"A", oor_num:1675, oor_den:3443, sla_ok:186, sla_tot:206, weak:41,
+    rows:[["वार्ड 7 · 1 कनेक्शन","−31 dBm"],["वार्ड 3 · 1 कनेक्शन","−29 dBm"],["वार्ड 7 · 1 कनेक्शन","−28 dBm"]]
+  },
+  a_amber: {
+    label:"A · 🟠", note:'<b>Case 2 — Track A, Amber (75–79%).</b> नमूना. Target बहुत पास — copy पूरी तरह "बस X% और" पर टिकी है, कोई blame नहीं.',
+    id:"a0b7c2", track:"A", oor_num:565, oor_den:2500, sla_ok:98, sla_tot:150, weak:12,
+    rows:[["वार्ड 2 · 1 कनेक्शन","−28 dBm"],["वार्ड 5 · 1 कनेक्शन","−27 dBm"]]
+  },
+  a_green: {
+    label:"A · 🟢", note:'<b>Case 3 — Track A, Green.</b> नमूना. 80% पार — ₹10,000 पक्का, पर महीना बाकी है इसलिए "बनाए रखें" वाली line.',
+    id:"a0b9k4", track:"A", oor_num:537, oor_den:3000, sla_ok:120, sla_tot:190, weak:4,
+    rows:[["वार्ड 1 · 1 कनेक्शन","−27 dBm"]]
+  },
+  b_red: {
+    label:"B · 🔴", note:'<b>Case 4 — Track B, Red.</b> नमूना, cohort के median पर: OP 84% (इसलिए Track B) पर SLA सिर्फ़ 60.9%. यही Track B की असली कहानी है — network fit है, service नहीं.',
+    id:"a0b8m1", track:"B", oor_num:656, oor_den:4100, sla_ok:106, sla_tot:174, open_tkt:5,
+    rows:[["वार्ड 4 · net बंद","3 घं. बाकी"],["वार्ड 9 · slow net","2 घं. बाकी"],["वार्ड 2 · net बंद","1 घं. बाकी"]]
+  },
+  b_amber: {
+    label:"B · 🟠", note:'<b>Case 5 — Track B, Amber.</b> नमूना. Gap छोटा है — एक-दो ticket समय पर बंद हुए तो 80% पार.',
+    id:"a0c0f7", track:"B", oor_num:749, oor_den:3600, sla_ok:172, sla_tot:224, open_tkt:2,
+    rows:[["वार्ड 6 · slow net","4 घं. बाकी"],["वार्ड 6 · net बंद","2 घं. बाकी"]]
+  },
+  b_green: {
+    label:"B · 🟢", note:'<b>Case 6 — Track B, Green.</b> नमूना. 80% पार — ticket आते रहेंगे, इसलिए "% अभी भी बदल सकता है" साफ़ कहा है.',
+    id:"a0b6y3", track:"B", oor_num:336, oor_den:2900, sla_ok:149, sla_tot:165, open_tkt:0, rows:[]
+  },
+  unclass: {
+    label:"बिना telemetry", note:'<b>Case 7 — Unclassified.</b> Tirth Digital Network, 221 ग्राहक, कोई optical telemetry नहीं → OP पर track नहीं दे सकते. यहाँ <b>SLA-only default</b> दिखाया है (Track B जैसा). <span class="flag">यह अभी खुला फ़ैसला है — SLA-only या manual.</span>',
+    id:"tirth", track:"B", oor_num:null, oor_den:null, sla_ok:186, sla_tot:249, open_tkt:6,
+    rows:[["वार्ड 1 · net बंद","2 घं. बाकी"],["वार्ड 3 · slow net","4 घं. बाकी"]]
+  },
+  offered: {
+    label:"Opt-in", note:'<b>Case 8 — Offered (pre-enroll).</b> a0b6t9 का असली baseline. यही वो पहली screen है जो CSP देखता है: उसका आज का number, 80% की लकीर, और एक accept button (Install-MG वाला enrollment flow reuse होता है).',
+    id:"a0b6t9", track:"A", oor_num:1675, oor_den:3443, sla_ok:186, sla_tot:206, weak:41, offered:true,
+    rows:[["वार्ड 7 · 1 कनेक्शन","−31 dBm"],["वार्ड 3 · 1 कनेक्शन","−29 dBm"]]
+  },
+  pass: {
+    label:"महीना पास", note:'<b>Case 9 — Month-end pass.</b> नमूना. Grade आख़िरी 5 दिन के aggregate पर (OP). जीत public तौर पर celebrate करनी है — word-of-mouth यही चलाता है.',
+    id:"a0b6t9", track:"A", oor_num:1675, oor_den:3443, sla_ok:186, sla_tot:206, weak:41, verdict:"pass", final:81.6, rows:[]
+  },
+  miss: {
+    label:"महीना मिस", note:'<b>Case 10 — Month-end miss.</b> नमूना. Tone ईमानदार, पर कोई blame नहीं और कोई "fail" शब्द नहीं: install की कमाई सुरक्षित है, अगला महीना 1 तारीख से नया.',
+    id:"a0b9x8", track:"A", oor_num:null, oor_den:null, sla_ok:0, sla_tot:0, verdict:"miss", final:74.2, rows:[]
+  }
+};
+
+var HIm = ['जनवरी','फ़रवरी','मार्च','अप्रैल','मई','जून','जुलाई','अगस्त','सितंबर','अक्टूबर','नवंबर','दिसंबर'];
+function inr(n){ return n.toLocaleString('en-IN'); }
+function band(p){ return p >= 80 ? 'green' : p >= 75 ? 'amber' : 'red'; }
+
+function compute(c){
+  var ist  = new Date(Date.now() + 330*60000);
+  var im1  = ist.getUTCMonth()+1;
+  var dim  = new Date(Date.UTC(ist.getUTCFullYear(), im1, 0)).getUTCDate();
+  var op   = c.oor_den ? 100 - (c.oor_num / c.oor_den * 100) : null;   // 100 − T1_OOR_RATE
+  var sla  = c.sla_tot ? (c.sla_ok / c.sla_tot * 100) : null;          // M3 TAT pass rate
+  var val  = c.track === 'A' ? op : sla;
+  return {
+    op:op, sla:sla, val:val,
+    band: val==null ? 'idle' : band(val),
+    gap: val==null ? null : Math.max(0, Math.ceil(80 - val)),
+    days: Math.max(0, dim - ist.getUTCDate()),
+    month: HIm[im1-1]
+  };
+}
+
+/* ---- copy, track-branched. सिर्फ़ वही एक metric बोलती है जो ₹10,000 तय करता है. ---- */
+function copy(c, m){
+  var A = c.track === 'A';
+  var late = c.sla_tot - c.sla_ok;
+
+  var t = {
+    track   : A ? '🩺 इलाज' : '💪 फिट रखना',
+    metric  : A ? 'Optical Power' : 'समय पर समाधान',
+    moneysub: A ? 'आपके network की Optical Power 80% → पूरे ₹10,000, install की कमाई के ऊपर'
+                : 'हर शिकायत 4 घंटे में बंद, 80% → पूरे ₹10,000, install की कमाई के ऊपर',
+    subline : A
+      ? (c.oor_den ? inr(c.oor_den)+' ping में से '+inr(c.oor_num)+' कमज़ोर = '+m.op.toFixed(0)+'% सेहत · पिछले 15 दिन का औसत' : '—')
+      : (c.sla_tot ? c.sla_tot+' शिकायत · '+c.sla_ok+' चार घंटे में बंद, '+late+' देर से = '+m.sla.toFixed(0)+'% · पिछले 60 दिन का औसत' : '—'),
+    when    : 'कब मिलेगा? — बस एक शर्त',
+    c1em    : A ? '🩺' : '⏱',
+    c1      : A ? 'महीने के आख़िर में आपकी Optical Power 80% या ऊपर'
+                : 'महीने के आख़िर में आपका समय पर समाधान 80% या ऊपर',
+    fine    : A
+      ? '· सिर्फ़ Optical Power गिना जाएगा — service वाला number इस महीने मायने नहीं रखता<br>· ये ₹10,000 आपकी install और service की कमाई के <b>ऊपर</b> है<br>· 80% न छू पाए तो कोई कटौती नहीं — बस ये bonus नहीं मिलेगा'
+      : '· सिर्फ़ समय पर समाधान गिना जाएगा — Optical Power इस महीने मायने नहीं रखता<br>· ये ₹10,000 आपकी install और service की कमाई के <b>ऊपर</b> है<br>· 80% न छू पाए तो कोई कटौती नहीं — बस ये bonus नहीं मिलेगा',
+    waith   : A ? 'सुधार दिखने में एक दिन लगता है' : 'ये 60 दिन का average है',
+    waits   : A ? 'ये number पिछले 15 दिन की सारी ping का औसत है. आज joint ठीक किया तो कल से चढ़ना शुरू होगा — एक दिन में पूरा नहीं कूदेगा.'
+                : 'ये number पिछले 60 दिन की सारी शिकायतों का औसत है. हर ticket जो आप समय पर बंद करेंगे, इसे रोज़ थोड़ा ऊपर ले जाएगा.',
+    foot    : 'एक बार sign-up — हर महीने नया target, नया ₹10,000. सवाल हो तो helpline पर call करें.'
+  };
+
+  /* आप कहाँ हैं — need line */
+  if (m.val == null)            t.need = 'गिनती पहली शिकायत से शुरू होगी';
+  else if (m.band === 'green')  t.need = '✓ 80% पूरा — ₹10,000 पक्का';
+  else if (m.band === 'amber')  t.need = 'बस ' + m.gap + '% और';
+  else                          t.need = m.gap + '% और चाहिए — 80% पर ₹10,000';
+
+  if (m.band === 'green') {
+    t.subline += A ? ' · महीने के आख़िर तक ऐसे ही बनाए रखें' : ' · नई शिकायत आने पर % बदल सकता है';
+  }
+
+  /* पीला card — आज क्या करें */
+  if (A) {
+    t.acth = '🔧 आज ये ठीक करें';
+    t.acts = c.weak ? c.weak + ' कनेक्शन कमज़ोर — सबसे ख़राब पहले:' : 'अभी कोई कमज़ोर कनेक्शन नहीं.';
+    t.actfoot = 'एक भी कनेक्शन ठीक हुआ तो % ऊपर जाएगा. पूरी list रोज़ सुबह app में आती है.';
+  } else {
+    t.acth = '🔥 आज ये ticket बंद करें';
+    t.acts = c.open_tkt ? c.open_tkt + ' ticket खुले हैं — 4 घंटे के अंदर बंद करें:' : 'अभी कोई खुला ticket नहीं.';
+    t.actfoot = c.open_tkt ? 'बंद करके app में mark ज़रूर करें — तभी "समय पर" गिना जाएगा.'
+                           : 'जो शिकायत आए, उसी दिन 4 घंटे में बंद करें.';
+  }
+
+  /* सीखें */
+  t.edus = A ? 'Optical Power ही इस महीने आपके ₹10,000 तय करता है. दो मिनट में समझ लीजिए — फिर ठीक करना आसान है.'
+             : 'समय पर समाधान ही इस महीने आपके ₹10,000 तय करता है. दो मिनट में समझ लीजिए.';
+
+  t.faq = A ? [
+    ['Optical Power है क्या?',
+     '<div class="ans">आपकी fibre में <b>light की ताक़त</b>. Light कमज़ोर पड़ी तो ग्राहक का net धीमा चलेगा, कटता-जुड़ता रहेगा — और शिकायत आपके पास आएगी.<br><br>हम आपके हर कनेक्शन को दिन भर <b>ping</b> करते हैं. जो ping सही range में आया वो अच्छा, जो बाहर गया वो कमज़ोर. <b>100 ping में जितने सही, वही आपकी सेहत %.</b></div>'],
+    ['80% का मतलब क्या है?',
+     '<div class="ans">हर 100 ping में कम से कम <b>80 सही</b> होने चाहिए. अभी आपके <b>' + (m.op!=null ? m.op.toFixed(0) : '—') + ' सही</b> हैं.<br><br>ये पिछले <b>15 दिन</b> की सारी ping जोड़कर निकलता है — किसी एक दिन का नहीं.</div>'],
+    ['कैसे ठीक करें? — 5 काम',
+     '<div class="steps">' +
+     step(1,'पुराना joint / splice दोबारा करें','सबसे बड़ी वजह यही है') +
+     step(2,'Connector साफ़ करें','धूल से light 3–4 dB तक गिर जाती है') +
+     step(3,'Fibre का तीखा मोड़ सीधा करें','दीवार के कोने और खिड़की के पास देखिए') +
+     step(4,'Splitter पर load बाँटें','एक ही splitter पर बहुत ज़्यादा कनेक्शन न रखें') +
+     step(5,'ख़राब patch cord बदल दें','सस्ता काम, सबसे तेज़ फ़ायदा') +
+     '</div>'],
+    ['कहाँ से शुरू करूँ?',
+     '<div class="ans">ऊपर पीले box में जो कनेक्शन दिख रहे हैं — <b>वही सबसे कमज़ोर हैं</b>. उन्हें पहले ठीक कीजिए. एक-एक करके ठीक करेंगे तो % अपने आप चढ़ेगा.<br><br>बहुत ख़राब network के लिए <b>priority helpline</b> और field visit भी है — call कीजिए.</div>'],
+    ['मुझे ये क्यों मिला?',
+     '<div class="ans">आप इस बार install वाली गारंटी में नहीं आ पाए. इसलिए हमने आपके लिए <b>दूसरा रास्ता</b> बनाया — अपने network की सेहत सुधारिए, वही ₹10,000.<br><br>ये पूरी तरह <b>आपके हाथ में</b> है: कोई lead का इंतज़ार नहीं, कोई ग्राहक की "हाँ" का इंतज़ार नहीं.</div>']
+  ] : [
+    ['समय पर समाधान है क्या?',
+     '<div class="ans">शिकायत आने के <b>4 घंटे के अंदर</b> बंद हुई = समय पर.<br><br>पिछले <b>60 दिन</b> की आपकी सारी शिकायतें गिनी जाती हैं — उनमें से कितनी 4 घंटे में बंद हुईं, वही आपका %. अभी: <b>' + c.sla_tot + ' में से ' + c.sla_ok + '</b>.</div>'],
+    ['80% का मतलब क्या है?',
+     '<div class="ans">हर 100 शिकायत में कम से कम <b>80</b> चार घंटे के अंदर बंद. अभी आपकी <b>' + (m.sla!=null ? m.sla.toFixed(0) : '—') + '</b> हैं.<br><br>एक भी देर से बंद हुई शिकायत % नीचे खींचती है — इसलिए रोज़ सुबह खुले ticket देखना सबसे ज़रूरी आदत है.</div>'],
+    ['कैसे सुधारें? — 4 काम',
+     '<div class="steps">' +
+     step(1,'शिकायत आते ही ग्राहक को call करें','2 मिनट की call, आधा काम वहीं हो जाता है') +
+     step(2,'उसी दिन जाइए — कल पर मत छोड़िए','कल गए तो 4 घंटे तो कब के निकल गए') +
+     step(3,'ठीक करते ही app में बंद mark करें','App में बंद नहीं किया = समय पर नहीं गिना') +
+     step(4,'रोज़ सुबह खुले ticket देखें','दिन की शुरुआत यहीं से') +
+     '</div>'],
+    ['Technician भेजूँ या ख़ुद जाऊँ?',
+     '<div class="ans">जो भी तेज़ हो. गिनती इस बात की है कि <b>4 घंटे में शिकायत बंद हुई या नहीं</b> — कौन गया, ये मायने नहीं रखता.</div>'],
+    ['मुझे ये क्यों मिला?',
+     '<div class="ans">आप इस बार install वाली गारंटी में नहीं आ पाए. इसलिए हमने आपके लिए <b>दूसरा रास्ता</b> बनाया.<br><br>आपका network तो पहले से ठीक है (Optical Power ' + (m.op!=null ? m.op.toFixed(0)+'%' : '—') + ') — इसलिए आपका काम <b>service तेज़ करना</b> है. ये पूरी तरह आपके हाथ में है.</div>']
+  ];
+
+  return t;
+}
+
+function step(n, title, sub){
+  return '<div class="step"><span class="n">'+n+'</span><span class="st">'+title+'<br><em>'+sub+'</em></span></div>';
+}
+
+function set(id, v){ var e = document.getElementById(id); if (e) e.textContent = v; }
+function html(id, v){ var e = document.getElementById(id); if (e) e.innerHTML = v; }
+function show(id, on){ var e = document.getElementById(id); if (e) e.style.display = on ? '' : 'none'; }
+
+var current = 'a_red';
+
+function render(key){
+  current = key;
+  var c = CASES[key], m = compute(c), t = copy(c, m);
+  var end = c.verdict === 'pass' || c.verdict === 'miss';
+
+  document.getElementById('caseNote').innerHTML = c.note;
+  Array.prototype.forEach.call(document.querySelectorAll('#switch button'), function(b){
+    b.setAttribute('aria-pressed', b.dataset.k === key ? 'true' : 'false');
+  });
+
+  set('v_id', c.id);
+  set('v_month', t_month(m, end));
+  set('v_days', m.days);
+
+  /* --- money card --- */
+  if (end){
+    set('v_moneyk', c.verdict === 'pass' ? 'इस महीने की गारंटी' : 'इस महीने की गारंटी');
+    set('v_money', c.verdict === 'pass' ? '₹10,000' : '₹0');
+    var mel = document.getElementById('v_money');
+    mel.style.color = c.verdict === 'pass' ? 'var(--green)' : 'var(--t3)';
+    html('v_moneysub', c.verdict === 'pass'
+      ? '1 तारीख को आपके खाते में — install की कमाई के ऊपर'
+      : '<span style="color:var(--t2)">install और service की कमाई पूरी सुरक्षित है — उसमें कोई कटौती नहीं</span>');
+  } else {
+    document.getElementById('v_money').style.color = '';
+    set('v_moneyk', c.offered ? 'आपके लिए — इस महीने से' : 'आपकी गारंटी — इस महीने');
+    set('v_money', '₹10,000');
+    html('v_moneysub', t.moneysub);
+  }
+
+  /* --- where you are / verdict --- */
+  show('c_where', !end);
+  show('c_win', end);
+  if (end){
+    var pass = c.verdict === 'pass';
+    set('v_winem', pass ? '🎉' : '🌱');
+    set('v_winh', pass ? 'बधाई हो — ₹10,000 पक्का' : 'इस बार नहीं — अगला महीना आपका');
+    html('v_wins', pass
+      ? '<b>' + t.metric + ' ' + c.final + '%</b> — 80% की लकीर पार. पैसा 1 तारीख को खाते में आ जाएगा.<br>अगले महीने फिर से नया target, फिर से ₹10,000.'
+      : '<b>' + t.metric + ' ' + c.final + '%</b> — 80% से थोड़ा नीचे रह गया. इस बार का bonus नहीं बना.<br><b>आपकी install और service की कमाई पूरी सुरक्षित है</b> — कुछ कटा नहीं.<br>1 तारीख से गिनती नए सिरे से शुरू. जो कनेक्शन ठीक किए, उनका फ़ायदा अगले महीने दिखेगा.');
+    document.getElementById('c_win').style.background = pass ? 'var(--green-bg)' : '#FFF6DA';
+    document.getElementById('c_win').style.borderColor = pass ? '#BFE6D2' : 'var(--yellowline)';
+    document.getElementById('v_winh').style.color = pass ? 'var(--green)' : '#7a4a00';
+    document.getElementById('v_wins').style.color = pass ? '#2b6b4c' : '#8a6a30';
+  } else {
+    document.getElementById('c_where').className = 'card f-' + m.band;
+    set('v_track', t.track);
+    set('v_pct', m.val == null ? '—' : m.val.toFixed(0));
+    set('v_sign', m.val == null ? '' : '%');
+    set('v_need80', '/ 80% चाहिए · ' + t.metric);
+    document.getElementById('v_fill').style.width = Math.min(100, m.val || 0) + '%';
+    set('v_needline', t.need);
+    html('v_subline', t.subline);
+  }
+
+  /* --- action --- */
+  show('c_act', !end && c.rows.length > 0);
+  if (!end && c.rows.length){
+    set('v_acth', t.acth);
+    set('v_acts', t.acts);
+    html('v_rows', c.rows.map(function(r){
+      var warn = /^[12] घं/.test(r[1]);
+      return '<div class="tkt"><span class="tn">' + r[0] + '</span>' +
+             '<span class="tc' + (warn ? ' warn' : '') + '">' + r[1] + '</span></div>';
+    }).join(''));
+    set('v_actfoot', t.actfoot);
+  }
+
+  /* --- delay disclosure, guarantee, education --- */
+  show('c_wait', !end);
+  set('v_waith', t.waith);
+  set('v_waits', t.waits);
+
+  show('c_guar', !end);
+  set('v_when', t.when);
+  set('v_c1em', t.c1em);
+  set('v_c1', t.c1);
+  html('v_fine', t.fine);
+
+  set('v_edus', t.edus);
+  html('v_faq', t.faq.map(function(f){
+    return '<details><summary>' + f[0] + '<span class="cv">+</span></summary>' + f[1] + '</details>';
+  }).join(''));
+
+  show('c_optin', !!c.offered);
+  set('v_foot', end
+    ? 'सवाल हो तो helpline पर call करें.'
+    : (c.offered ? 'Sign-up सिर्फ़ पहले 5 दिन खुला है. एक बार हाँ — फिर हर महीने अपने आप.' : t.foot));
+}
+
+function t_month(m, end){ return end ? m.month : m.month; }
+
+/* switcher */
+var sw = document.getElementById('switch');
+Object.keys(CASES).forEach(function(k){
+  var b = document.createElement('button');
+  b.type = 'button'; b.dataset.k = k; b.textContent = CASES[k].label;
+  b.addEventListener('click', function(){ render(k); });
+  sw.appendChild(b);
+});
+
+/* opt-in — mirrors the Install-MG single-accept enrollment */
+document.getElementById('v_cta').addEventListener('click', function(){
+  this.textContent = '✓ आप शामिल हैं — 1 तारीख से गिनती शुरू';
+  this.classList.add('done');
+  this.disabled = true;
+});
+
+/* ?cspId= / ?case= — same contract as the Kamai Kavach page */
+(function(){
+  var q = new URLSearchParams(location.search);
+  var cs = q.get('case');
+  var id = (q.get('cspId') || q.get('cspid') || q.get('csp_id') || '').toLowerCase();
+  if (cs && CASES[cs]) return render(cs);
+  if (id){
+    var hit = Object.keys(CASES).filter(function(k){ return CASES[k].id.toLowerCase() === id; })[0];
+    if (hit) return render(hit);
+  }
+  render('a_red');
+})();
+</script>
+
+</body>
+</html>
