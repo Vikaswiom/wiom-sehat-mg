@@ -7,6 +7,32 @@ The CSP-facing screen for **Sehat MG**: the ₹10,000/month guarantee for active
 Design system, card rhythm and copy register are inherited verbatim from
 [wiom-mbg-kamai-kavach](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/).
 
+Logic audited against the program note `Sehat_MG_Quality_Program.html` (Version 2.0, July 2026).
+Every case below matches the spec; deviations are called out in **Known gaps**.
+
+---
+
+## Spec conformance — every case
+
+Audited against `Sehat_MG_Quality_Program.html`:
+
+| Spec rule | Where | Screen |
+|---|---|---|
+| % Optical Power = in-range OK pings ÷ total, 15 telemetry days | §10 | `ok/all` ✅ |
+| % Resolve On Time = within-4hr ÷ total, 60-day lookback | §10 | `sok/stot` ✅ |
+| Track split: OP <75 → A (Ilaaj), ≥75 → B (Fit rakhna) | §4, §10 | month-start OP ✅ |
+| Both tracks target 80%; only the track's one metric is graded | §4, §5 | ✅ stated explicitly |
+| RAG: 🟢 healthy ≥80 · 🟠 within 5% (75–79) · 🔴 <75 | §7 | ✅ |
+| **Grade window: Track A = last 5 days · Track B = last 15 days** | §5 | ✅ named in guarantee card; delay card steps up when inside it |
+| Binary ₹10,000, Day-1 next month, same run as Install MG | §5 | ✅ |
+| Unclassified (no telemetry) → SLA-only default | §10 | ✅ "🩺 सर्विस ट्रैक" — does **not** claim the network is "fit" |
+| Track B message: "network already healthy — keep it *and* sharpen service" | §4 callout | ✅ |
+| Daily checkup: current %, 80% line, RAG, days left, one next action | §7 | ✅ |
+
+The seven live states (Track A/B × 🔴🟠🟢, plus Unclassified) all render from `data.json`; offer →
+sign-up → pass/fail are lifecycle states handled by the Install-MG enrollment + payout runs (§6),
+not by this daily tile.
+
 ---
 
 ## ⚠️ How the app must open this page
@@ -128,19 +154,28 @@ Metabase for the requested `cspId`. It returns the same raw shape; nothing else 
 
 ## Known gaps
 
-1. **The graded window is not the window the screen shows.** Payout grades on a month-end window
-   (OP = last 5 days, SLA = last 15-day average); the screen shows the quality-service rolling
-   numbers (15-day OP, 60-day SLA). A CSP must not be graded on a number the app never displayed —
-   align the two, or state it on the screen.
-2. **No live open-ticket feed.** Every unresolved row in `COMPLAINT_RESOLUTION_LEDGER` is **7+ days
+1. **The graded window is not the window the screen shows** (now disclosed, not silent). §5 grades
+   on a month-end window (OP = last 5 days, SLA = last 15-day average); §7/§10 say the daily tile
+   shows the rolling number (15-day OP, 60-day SLA). The screen keeps the rolling number (spec-correct
+   for the daily checkup) but **names the exact grade window in the guarantee card** ("महीने के
+   आख़िरी 5/15 दिन"), and the delay card **steps up as that window opens** (§7 window-mode reminders).
+   Fully closing it needs a last-5-day / last-15-day aggregate baked into `data.json` — cheap to add
+   when Growth confirms it should replace, not just annotate, the rolling number.
+2. **"Whom to treat" ONT list is Phase-2** (§7 calls it the most valuable feature). A true worst-first
+   per-ONT optical list needs per-ONT readings, which live in **OSS/NMS** (§5 source of truth), not
+   the warehouse — the only per-device warehouse table (`HOURLY_DEVICE_PING_INFLUX`) measures *uptime
+   missed-pings*, a different basis that would not reconcile with the graded Optical Power. Rather than
+   show a number that fights the grade (§9 "data CSPs trust"), Track A's card carries the concrete
+   physical fix-list; wire the real ONT list when the OSS/NMS feed is available.
+3. **No live open-ticket feed.** Every unresolved row in `COMPLAINT_RESOLUTION_LEDGER` is **7+ days
    old** (567 aged 7–30d, 432 over 30d, **zero** under 24h), so those are stale hygiene artifacts,
    not a work queue. Track B's action card is therefore built on the real breach count, not a fake
    4-hour countdown. A genuine open-ticket list needs the ops ticketing system.
-3. **75% split vs 80% target.** A CSP at OP 76% lands in Track B and can bank ₹10,000 on SLA alone
+4. **75% split vs 80% target.** A CSP at OP 76% lands in Track B and can bank ₹10,000 on SLA alone
    while their optical never reaches 80%. Confirm this is intended.
-4. **Payout source of truth** — the note says OSS/NMS + ticketing; what is live and reproducible is
+5. **Payout source of truth** — the note says OSS/NMS + ticketing; what is live and reproducible is
    `CSP_QUALITY_SERVICE`. Pick one.
-5. **55 CSPs have no optical telemetry** and cannot be track-assigned. They currently default to
-   SLA-only (Track B). Confirm, or handle manually.
-6. **Enrollment** is not wired — the screen assumes the CSP is already in. Reuse the Install-MG
-   single-accept flow.
+6. **55 CSPs have no optical telemetry** and cannot be track-assigned. They currently default to
+   SLA-only ("🩺 सर्विस ट्रैक", not "फिट रखना"). Confirm, or handle manually (§10).
+7. **Enrollment** is not wired — the screen assumes the CSP is already in. Reuse the Install-MG
+   single-accept flow (§6).
