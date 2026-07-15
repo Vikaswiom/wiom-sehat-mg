@@ -23,9 +23,11 @@ NOTE ON THE FORMULA — this is the one thing to not get wrong:
 import json, os, sys, urllib.request
 from datetime import datetime, timezone, timedelta
 
-ENV = r"C:\credentials\.env"
-SQL = os.path.join(os.path.dirname(os.path.abspath(__file__)), "query.sql")
-OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "data.json")
+HERE = os.path.dirname(os.path.abspath(__file__))
+ENV  = r"C:\credentials\.env"
+SQL  = os.path.join(HERE, "query.sql")
+WEAK = os.path.join(HERE, "weak_query.sql")   # Track-A worst-first weak connections
+OUT  = os.path.join(HERE, "data.json")
 
 key = os.environ.get("METABASE_API_KEY")
 if not key and os.path.exists(ENV):
@@ -35,23 +37,22 @@ if not key and os.path.exists(ENV):
 if not key:
     sys.exit("METABASE_API_KEY not found (env var or C:\\credentials\\.env)")
 
-req = urllib.request.Request(
-    "https://metabase.wiom.in/api/dataset",
-    data=json.dumps({
-        "database": 113,
-        "type": "native",
-        "native": {"query": open(SQL, encoding="utf-8").read()},
-    }).encode(),
-    headers={"X-API-KEY": key, "Content-Type": "application/json"},
-    method="POST",
-)
-with urllib.request.urlopen(req, timeout=600) as r:
-    res = json.loads(r.read().decode())
-if res.get("status") == "failed":
-    sys.exit("query failed: " + str(res.get("error"))[:500])
+def run(sql_path):
+    req = urllib.request.Request(
+        "https://metabase.wiom.in/api/dataset",
+        data=json.dumps({"database": 113, "type": "native",
+                         "native": {"query": open(sql_path, encoding="utf-8").read()}}).encode(),
+        headers={"X-API-KEY": key, "Content-Type": "application/json"},
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=600) as r:
+        res = json.loads(r.read().decode())
+    if res.get("status") == "failed":
+        sys.exit("query failed (" + os.path.basename(sql_path) + "): " + str(res.get("error"))[:400])
+    cols = [c["name"] for c in res["data"]["cols"]]
+    return [dict(zip(cols, row)) for row in res["data"]["rows"]]
 
-cols = [c["name"] for c in res["data"]["cols"]]
-rows = [dict(zip(cols, row)) for row in res["data"]["rows"]]
+rows = run(SQL)
 
 data, tracks = {}, {"A": 0, "B": 0, "U": 0}
 for r in rows:
@@ -68,6 +69,19 @@ for r in rows:
         rec["op0"] = round(float(r["OP_MONTH_START"]), 1)
     data[cid.lower()] = rec
 
+# Track-A weak-connection lists (whom to treat) — merge worst-first ONTs into each record.
+weak_rows, weak_csps = run(WEAK), 0
+for r in weak_rows:
+    cid = (r["CSP_ID"] or "").lower()
+    if cid not in data:
+        continue
+    worst = r["WORST"]
+    if isinstance(worst, str):
+        worst = json.loads(worst)
+    data[cid]["wn"] = int(r["WEAK_N"] or 0)                       # total weak connections
+    data[cid]["wk"] = [{"d": w["d"], "v": int(w["v"])} for w in worst]   # worst 3: device + dBm
+    weak_csps += 1
+
 ist = datetime.now(timezone.utc) + timedelta(minutes=330)
 out = {
     "meta": {
@@ -79,6 +93,8 @@ out = {
         "sla_tat_hours": 4,
         "target_pct": 80,
         "track_split_pct": 75,
+        "weak_dbm_floor": -25,
+        "weak_source": "PROD_DB.DBT.HOURLY_DEVICE_PING_INFLUX",
     },
     "data": data,
 }
@@ -87,3 +103,4 @@ with open(OUT, "w", encoding="utf-8") as f:
 
 print(f"data.json  {len(data)} CSPs  {os.path.getsize(OUT)/1024:.0f} KB")
 print(f"tracks     A(ilaaj) {tracks['A']}  B(fit-rakhna) {tracks['B']}  unclassified {tracks['U']}")
+print(f"weak lists {weak_csps} Track-A CSPs got a worst-first connection list")

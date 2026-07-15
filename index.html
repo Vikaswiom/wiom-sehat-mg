@@ -41,7 +41,8 @@ html,body{background:var(--screen);}
 .tkt{background:#fff;border:1px solid #efe3c4;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px;}
 .tkt .tn{font-size:12.5px;font-weight:700;line-height:1.5;}
 .tkt .tn em{font-style:normal;font-weight:600;color:#8a6a30;font-size:11px;}
-.tkt .tc{font-size:11px;font-weight:800;color:var(--purple);white-space:nowrap;flex:none;}
+.tkt .tc{font-size:11px;font-weight:800;color:var(--purple);white-space:nowrap;flex:none;font-variant-numeric:tabular-nums;}
+.tkt .tc.warn{color:var(--red);}
 .act .fs{font-size:11px;color:#8a6a30;font-weight:600;line-height:1.5;}
 .wait{background:var(--tealbg);border:1px solid var(--tealline);border-radius:15px;padding:12px 13px;display:flex;gap:9px;}
 .wait .ic{font-size:15px;line-height:1.2;flex:none;}
@@ -200,7 +201,7 @@ function compute(d){
 
 function n(x){ return Number(x).toLocaleString('en-IN'); }
 function step(i,t,s){ return '<div class="step"><span class="n">'+i+'</span><span class="st">'+t+'<br><em>'+s+'</em></span></div>'; }
-function row(t,s,c){ return '<div class="tkt"><span class="tn">'+t+'<br><em>'+s+'</em></span><span class="tc">'+c+'</span></div>'; }
+function row(t,s,c,warn){ return '<div class="tkt"><span class="tn">'+t+'<br><em>'+s+'</em></span><span class="tc'+(warn?' warn':'')+'">'+c+'</span></div>'; }
 function faq(a){ return a.map(function(f){ return '<details><summary>'+f[0]+'<span class="cv">+</span></summary>'+f[1]+'</details>'; }).join(''); }
 
 function render(d, m){
@@ -223,12 +224,21 @@ function render(d, m){
 
   var actH, actS, actRows, actF;
   if (A){
-    actH = '🔧 आज ये ठीक करें';
-    actS = 'सबसे तेज़ असर इन्हीं से आता है:';
-    actRows = row('पुराना joint / splice दोबारा करें','कमज़ोर light की सबसे बड़ी वजह','सबसे पहले') +
-              row('Connector साफ़ करें','धूल से light 3–4 dB तक गिर जाती है','आसान') +
-              row('Fibre का तीखा मोड़ सीधा करें','दीवार के कोने और खिड़की के पास देखिए','आसान');
-    actF = 'पूरी list नीचे “समझ लीजिए” में है. बहुत ख़राब network के लिए helpline पर call कीजिए — field visit मिलेगी.';
+    var wk = d.wk || [];
+    if (wk.length){
+      /* whom to treat — the real out-of-range ONTs, worst-first (§7) */
+      actH = '🔧 आज ये कनेक्शन ठीक करें';
+      actS = (d.wn || wk.length) + ' कनेक्शन कमज़ोर — सबसे ख़राब पहले:';
+      actRows = wk.map(function(w){
+        return row('ONT ' + w.d, 'signal कमज़ोर — जाकर ठीक करें', w.v + ' dBm', true);
+      }).join('');
+      actF = 'ये आपके सबसे कमज़ोर कनेक्शन हैं — इन्हें ठीक करते ही Optical Power ऊपर जाएगा. <b>कैसे ठीक करें</b> नीचे “समझ लीजिए” में. बहुत ख़राब हो तो helpline पर call कीजिए — field visit मिलेगी.';
+    } else {
+      actH = '🔧 आज का काम';
+      actS = 'अभी कोई कनेक्शन out-of-range नहीं दिख रहा — बढ़िया!';
+      actRows = row('जो चल रहा है, वैसा ही बनाए रखें','नया कनेक्शन कमज़ोर दिखे तो यहीं आएगा','✓') ;
+      actF = 'telemetry हर दिन update होती है. कैसे network स्वस्थ रखें — नीचे “समझ लीजिए” में.';
+    }
   } else {
     actH = '🔥 आज ये आदत बनाइए';
     actS = late > 0 ? 'पिछले 60 दिन में ' + late + ' शिकायत देर से बंद हुई — हर एक % नीचे खींचती है:'
@@ -274,7 +284,7 @@ function render(d, m){
        step(5,'ख़राब patch cord बदल दें','सस्ता काम, सबसे तेज़ फ़ायदा') +
      '</div>'],
     ['कहाँ से शुरू करूँ?',
-     '<div class="ans">जिन ग्राहकों की सबसे ज़्यादा शिकायत आती है — <b>वहीं से</b>. आपके <b>' + n(d.cn || 0) + ' कनेक्शन</b> में से सबसे कमज़ोर वाले पहले.<br><br>एक-एक करके ठीक करेंगे तो % अपने आप चढ़ेगा. बहुत ख़राब network के लिए <b>priority helpline</b> और field visit भी है.</div>'],
+     '<div class="ans">ऊपर पीले box में जो <b>ONT दिख रहे हैं — वही सबसे कमज़ोर हैं</b> (सबसे कम signal वाले पहले). उन्हीं से शुरू कीजिए.<br><br>−25 dBm से नीचे वाला हर कनेक्शन “out of range” गिना जाता है' + (m.op != null && d.wn ? ' — आपके <b>' + n(d.wn) + '</b> ऐसे हैं' : '') + '. एक-एक ठीक करेंगे तो % अपने आप चढ़ेगा. बहुत ख़राब हो तो <b>priority helpline</b> और field visit भी है.</div>'],
     ['मुझे ये क्यों मिला?',
      '<div class="ans">आप इस बार install वाली गारंटी में नहीं आ पाए. इसलिए हमने आपके लिए <b>दूसरा रास्ता</b> बनाया — अपने network की सेहत सुधारिए, वही ₹10,000.<br><br>ये पूरी तरह <b>आपके हाथ में</b> है: न lead का इंतज़ार, न ग्राहक की “हाँ” का.</div>']
   ] : [

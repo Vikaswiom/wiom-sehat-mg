@@ -131,6 +131,7 @@ and **986 of 1,053 CSPs** get dumped into Track A. With the correct formula the 
 | % समय पर समाधान | `COMPLAINT_RESOLUTION_LEDGER` | `COUNT_IF(RESOLVED_WITHIN_TAT)/COUNT(*)×100` · `TAT_WINDOW_HOURS = 4` · each CSP's own **60**-day snapshot lookback (M3) |
 | Track A/B/U | `DAILY_METRIC_SNAPSHOTS` | Optical Power on the **1st of the month** · <75 → A · ≥75 → B · no telemetry → U |
 | Active connections | `DAILY_METRIC_SNAPSHOTS` | `ACTIVE_CONNECTION_COUNT` |
+| **Weak connections** (Track A "whom to treat") | `DBT.HOURLY_DEVICE_PING_INFLUX` | per-device 15-day avg `OPTICAL_AVG` below **−25 dBm** = out-of-range; worst-first ONT serials + dBm. Join `CSP_ACCOUNT.partner_id`. `query.sql` → `weak_query.sql` |
 
 All in `PROD_DB.CSP_QUALITY_SERVICE_CSP_QUALITY_SERVICE` — the same engine the CSP app's
 **सेवा स्थिति** screen reads. Recomputed from source (not read off the snapshot) so the screen can
@@ -161,12 +162,14 @@ Metabase for the requested `cspId`. It returns the same raw shape; nothing else 
    आख़िरी 5/15 दिन"), and the delay card **steps up as that window opens** (§7 window-mode reminders).
    Fully closing it needs a last-5-day / last-15-day aggregate baked into `data.json` — cheap to add
    when Growth confirms it should replace, not just annotate, the rolling number.
-2. **"Whom to treat" ONT list is Phase-2** (§7 calls it the most valuable feature). A true worst-first
-   per-ONT optical list needs per-ONT readings, which live in **OSS/NMS** (§5 source of truth), not
-   the warehouse — the only per-device warehouse table (`HOURLY_DEVICE_PING_INFLUX`) measures *uptime
-   missed-pings*, a different basis that would not reconcile with the graded Optical Power. Rather than
-   show a number that fights the grade (§9 "data CSPs trust"), Track A's card carries the concrete
-   physical fix-list; wire the real ONT list when the OSS/NMS feed is available.
+2. **"Whom to treat" ONT list — now live** (§7's "most valuable feature"). Track A's action card lists
+   the CSP's worst-first out-of-range ONTs (serial + dBm) from `DBT.HOURLY_DEVICE_PING_INFLUX`, whose
+   per-device `OPTICAL_AVG` **does** carry optical signal (not just uptime). Two caveats to close later:
+   (a) that source lags ~12 days (freshest optical snapshot was Jul 3), so a just-fixed ONT may still
+   show — fine for a worst-first to-do list, not for grading; (b) the public `data.json` deliberately
+   carries **only the device serial + dBm, no customer name/phone/address** — when the authenticated
+   app build (`PROXY_URL`) lands, the list can add customer/area behind auth. `weak_dbm_floor` (−25) is
+   calibrated so the in-range share reproduces the app's T1 (a0b6t9 ~49%).
 3. **No live open-ticket feed.** Every unresolved row in `COMPLAINT_RESOLUTION_LEDGER` is **7+ days
    old** (567 aged 7–30d, 432 over 30d, **zero** under 24h), so those are stale hygiene artifacts,
    not a work queue. Track B's action card is therefore built on the real breach count, not a fake
