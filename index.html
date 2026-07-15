@@ -12,7 +12,9 @@
 --teal:#0E6E6E;--tealbg:#E6F2F2;--tealline:#CFE4E4;}
 *{box-sizing:border-box;margin:0;font-family:"Noto Sans Devanagari","Nirmala UI","Segoe UI",system-ui,sans-serif;}
 html,body{background:var(--screen);}
-.wrap{min-height:100vh;background:var(--screen);color:var(--text);max-width:430px;margin:0 auto;}
+/* Devanagari needs room above & below the base line for matras — set a comfortable
+   base line-height that every text node inherits, so nothing falls back to ~1.2 and clips. */
+.wrap{min-height:100vh;background:var(--screen);color:var(--text);max-width:430px;margin:0 auto;line-height:1.5;}
 .hdr{background:var(--maroon);color:#fff;padding:13px 15px;display:flex;align-items:center;gap:11px;}
 .hdr .t{font-size:15.5px;font-weight:700;flex:1;}
 .subhdr{background:var(--maroon);color:#e8dcec;padding:0 15px 11px;display:flex;justify-content:space-between;font-size:12px;font-weight:600;}
@@ -39,7 +41,7 @@ html,body{background:var(--screen);}
 .act .h{font-size:14px;font-weight:800;color:#7a4a00;}
 .act .s{font-size:11.5px;color:#8a6a30;font-weight:600;margin:8px 0 8px;}
 .tkt{background:#fff;border:1px solid #efe3c4;border-radius:11px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:7px;}
-.tkt .tn{font-size:12.5px;font-weight:700;line-height:1.45;}
+.tkt .tn{font-size:12.5px;font-weight:700;line-height:1.5;}
 .tkt .tn em{font-style:normal;font-weight:600;color:#8a6a30;font-size:11px;}
 .tkt .tc{font-size:11px;font-weight:800;color:var(--purple);white-space:nowrap;flex:none;}
 .act .fs{font-size:11px;color:#8a6a30;font-weight:600;line-height:1.5;}
@@ -49,12 +51,15 @@ html,body{background:var(--screen);}
 .wait .s{font-size:11.5px;color:#3c5c5c;font-weight:600;line-height:1.55;margin-top:3px;}
 .prot{background:var(--purpbg);border:1px solid #e6d6fa;border-radius:16px;padding:14px;}
 .prot .ph{font-size:12.5px;font-weight:800;color:var(--purple);}
-.prot .big{font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-1px;margin:6px 0 2px;}
-.prot .big span{font-size:13px;font-weight:700;color:#4a2a86;}
+.prot .big{font-size:24px;font-weight:800;color:var(--purple);letter-spacing:-1px;margin:6px 0 2px;line-height:1.35;}
+.prot .big span{font-size:13px;font-weight:700;color:#4a2a86;letter-spacing:normal;}
 .prot .when{font-size:11.5px;font-weight:800;color:#4a2a86;margin:8px 0 8px;}
 .cond{background:#fff;border:1px solid #ecdefb;border-radius:11px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:7px;}
-.cond .cl{font-size:12px;font-weight:700;display:flex;gap:7px;align-items:center;line-height:1.4;}
-.cond .cl .em{font-size:14px;flex:none;}
+/* NOT a flex container — the sentence contains a <b> run; flexing it would split
+   the text into separate items and spread them into ragged columns. Keep it a
+   normal inline flow so the emoji leads and the Hindi wraps as one paragraph. */
+.cond .cl{font-size:12px;font-weight:700;line-height:1.5;flex:1;}
+.cond .cl .em{font-size:14px;margin-right:6px;}
 .cond .cp{font-size:10px;font-weight:800;color:var(--purple);background:var(--pill);padding:3px 9px;border-radius:999px;white-space:nowrap;flex:none;}
 .prot .sb{font-size:11.5px;font-weight:800;color:#3a1a70;margin:9px 0 4px;}
 .prot .li{font-size:11.5px;color:#5a4a86;line-height:1.7;}
