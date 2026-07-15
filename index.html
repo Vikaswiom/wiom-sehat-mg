@@ -21,8 +21,6 @@ html,body{background:var(--screen);}
 .body{padding:13px;display:flex;flex-direction:column;gap:11px;}
 .card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:14px;}
 .k{font-size:12px;color:var(--t2);font-weight:600;}
-.krow{display:flex;justify-content:space-between;align-items:center;gap:8px;}
-.trackpill{font-size:10px;font-weight:800;color:var(--purple);background:var(--pill);padding:3px 9px;border-radius:999px;white-space:nowrap;}
 .earn-amt{font-size:30px;font-weight:800;letter-spacing:-1px;margin:5px 0 3px;font-variant-numeric:tabular-nums;}
 .earn-sub{font-size:11.5px;color:var(--green);font-weight:700;line-height:1.5;}
 .wyh-top{display:flex;align-items:baseline;gap:7px;margin:5px 0 2px;}
@@ -311,8 +309,7 @@ function render(d, m){
     '</div>' +
 
     '<div class="card f-' + m.band + '">' +
-      '<div class="krow"><span class="k">आप कहाँ हैं</span>' +
-        '<span class="trackpill">' + (A ? '🩺 इलाज' : (m.unclassified ? '🩺 सर्विस ट्रैक' : '💪 फिट रखना')) + '</span></div>' +
+      '<div class="k">आप कहाँ हैं</div>' +
       '<div class="wyh-top"><span class="wyh-pct">' + pct + (m.val == null ? '' : '%') + '</span>' +
         '<span class="wyh-tgt">/ 80% चाहिए · ' + metric + '</span></div>' +
       '<div class="bar"><div class="fill" style="width:' + Math.min(100, m.val || 0) + '%"></div><div class="mk"></div></div>' +
