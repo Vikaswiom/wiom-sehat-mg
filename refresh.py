@@ -26,7 +26,8 @@ from datetime import datetime, timezone, timedelta
 HERE = os.path.dirname(os.path.abspath(__file__))
 ENV  = r"C:\credentials\.env"
 SQL  = os.path.join(HERE, "query.sql")
-WEAK = os.path.join(HERE, "weak_query.sql")   # Track-A worst-first weak connections
+WEAK = os.path.join(HERE, "weak_query.sql")     # Track-A worst-first weak connections
+TKTS = os.path.join(HERE, "ticket_query.sql")   # Track-B still-open service tickets
 OUT  = os.path.join(HERE, "data.json")
 
 key = os.environ.get("METABASE_API_KEY")
@@ -83,6 +84,20 @@ for r in weak_rows:
                        for w in worst]                            # worst 3: device + dBm + coarse area
     weak_csps += 1
 
+# Track-B still-open service tickets (whom to resolve) — merge into each record.
+tkt_rows, tkt_csps = run(TKTS), 0
+for r in tkt_rows:
+    cid = (r["CSP_ID"] or "").lower()
+    if cid not in data:
+        continue
+    tk = r["TICKETS"]
+    if isinstance(tk, str):
+        tk = json.loads(tk)
+    data[cid]["tn"] = int(r["OPEN_N"] or 0)                       # total open tickets
+    data[cid]["tk"] = [{"a": (t.get("a") or ""), "g": int(t.get("g") or 0)}
+                       for t in tk]                               # most-overdue 3: area + age(days)
+    tkt_csps += 1
+
 ist = datetime.now(timezone.utc) + timedelta(minutes=330)
 out = {
     "meta": {
@@ -105,6 +120,7 @@ with open(OUT, "w", encoding="utf-8") as f:
 print(f"data.json  {len(data)} CSPs  {os.path.getsize(OUT)/1024:.0f} KB")
 print(f"tracks     A(ilaaj) {tracks['A']}  B(fit-rakhna) {tracks['B']}  unclassified {tracks['U']}")
 print(f"weak lists {weak_csps} Track-A CSPs got a worst-first connection list")
+print(f"open tkts  {tkt_csps} Track-B CSPs got an open-ticket list")
 
 # Keep the sibling Service-SLA deployment in sync (same track-aware app + data).
 import shutil

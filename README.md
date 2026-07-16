@@ -90,6 +90,11 @@ because "only one number counts" is the single most confusable thing about the p
 
 RAG: **🟢 ≥80 · 🟠 75–79 · 🔴 <75**
 
+**Copy note:** the Service-SLA metric is graded as *resolved within the 4-hour TAT* (spec §5), but the
+CSP-facing copy says **"समय से"** ("on time"), not "4 घंटे" — a deliberate simplification (many open
+tickets are days old, so a literal 4-hour clock reads wrong). The grade math is unchanged; only the
+wording is softened.
+
 ---
 
 ## ⚠️ The formula in the program note is inverted
@@ -133,6 +138,7 @@ and **986 of 1,053 CSPs** get dumped into Track A. With the correct formula the 
 | Active connections | `DAILY_METRIC_SNAPSHOTS` | `ACTIVE_CONNECTION_COUNT` |
 | **Weak connections** (Track A "whom to treat") | `DBT.HOURLY_DEVICE_PING_INFLUX` + `PUBLIC.ACTIVE_CUST` | per-device 15-day avg `OPTICAL_AVG` below **−25 dBm** = out-of-range; worst-first. **Active customers only** (ping feed still lists churned devices). Join `CSP_ACCOUNT.partner_id`. `weak_query.sql` |
 | **Connection area** (shown under each ONT) | `DBT.T_WG_CUSTOMER.address` | neighbourhood + pincode only (2nd comma-segment of the formatted address), most-recent row. **No house no / name / phone** → no identifying PII in the public file |
+| **Open tickets** (Track B "समय से resolve करें") | `COMPLAINT_RESOLUTION_LEDGER` + `CONNECTIONS.service_address` | `resolved_at IS NULL` SERVICE tickets, **most-overdue first**, with coarse area + age(days). `ticket_query.sql` → `tn`/`tk` in data.json |
 
 All in `PROD_DB.CSP_QUALITY_SERVICE_CSP_QUALITY_SERVICE` — the same engine the CSP app's
 **सेवा स्थिति** screen reads. Recomputed from source (not read off the snapshot) so the screen can
