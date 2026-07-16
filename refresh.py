@@ -105,3 +105,11 @@ with open(OUT, "w", encoding="utf-8") as f:
 print(f"data.json  {len(data)} CSPs  {os.path.getsize(OUT)/1024:.0f} KB")
 print(f"tracks     A(ilaaj) {tracks['A']}  B(fit-rakhna) {tracks['B']}  unclassified {tracks['U']}")
 print(f"weak lists {weak_csps} Track-A CSPs got a worst-first connection list")
+
+# Keep the sibling Service-SLA deployment in sync (same track-aware app + data).
+import shutil
+SIB = os.path.join(os.path.dirname(HERE), "wiom-sehat-service-sla")
+if os.path.isdir(SIB):
+    for f in ("index.html", "404.html", "data.json"):
+        shutil.copyfile(os.path.join(HERE, f), os.path.join(SIB, f))
+    print(f"synced     index.html + data.json -> {SIB}  (commit & push that repo too)")
