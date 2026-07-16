@@ -28,15 +28,28 @@ dev AS (   -- 15-day avg optical per device, cohort partners, CURRENT ACTIVE cus
     ON ac.device_id = p.device_id
   GROUP BY c.csp_id, p.device_id
 ),
+-- coarse locator per device: neighbourhood (2nd comma-segment) + pincode, most-recent row.
+-- NO house number / name / phone -> keeps the public file free of identifying PII.
+addr AS (
+  SELECT device_id,
+         NULLIF(TRIM(SPLIT_PART(TRY_PARSE_JSON(address):address::string, ',', 2)), '') AS locality,
+         TRY_PARSE_JSON(address):pincode::string                                        AS pincode
+  FROM PROD_DB.DBT.T_WG_CUSTOMER
+  WHERE address IS NOT NULL
+  QUALIFY ROW_NUMBER() OVER (PARTITION BY device_id ORDER BY added_time DESC) = 1
+),
 ranked AS (
-  SELECT csp_id, device_id, ROUND(opt, 0) AS dbm,
-         ROW_NUMBER() OVER (PARTITION BY csp_id ORDER BY opt ASC) AS rnk,
-         COUNT_IF(opt < -25) OVER (PARTITION BY csp_id)           AS weak_n
-  FROM dev
+  SELECT d.csp_id, d.device_id, ROUND(d.opt, 0) AS dbm,
+         COALESCE(a.locality || CASE WHEN a.pincode IS NOT NULL THEN ' · ' || a.pincode END,
+                  a.pincode, '') AS area,
+         ROW_NUMBER() OVER (PARTITION BY d.csp_id ORDER BY d.opt ASC) AS rnk,
+         COUNT_IF(d.opt < -25) OVER (PARTITION BY d.csp_id)           AS weak_n
+  FROM dev d
+  LEFT JOIN addr a ON a.device_id = d.device_id
 )
 SELECT csp_id,
        weak_n,
-       ARRAY_AGG(OBJECT_CONSTRUCT('d', device_id, 'v', dbm))
+       ARRAY_AGG(OBJECT_CONSTRUCT('d', device_id, 'v', dbm, 'a', area))
          WITHIN GROUP (ORDER BY rnk) AS worst
 FROM ranked
 WHERE rnk <= 3 AND dbm < -25

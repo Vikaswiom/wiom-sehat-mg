@@ -230,7 +230,7 @@ function render(d, m){
       actH = '🔧 आज ये कनेक्शन ठीक करें';
       actS = (d.wn || wk.length) + ' कनेक्शन कमज़ोर — सबसे ख़राब पहले:';
       actRows = wk.map(function(w){
-        return row('ONT ' + w.d, 'signal कमज़ोर — जाकर ठीक करें', w.v + ' dBm', true);
+        return row('ONT ' + w.d, (w.a ? '📍 ' + w.a : 'signal कमज़ोर — जाकर ठीक करें'), w.v + ' dBm', true);
       }).join('');
       actF = 'ये आपके सबसे कमज़ोर कनेक्शन हैं — इन्हें ठीक करते ही Optical Power ऊपर जाएगा. <b>कैसे ठीक करें</b> नीचे “समझ लीजिए” में. बहुत ख़राब हो तो helpline पर call कीजिए — field visit मिलेगी.';
     } else {

@@ -79,7 +79,8 @@ for r in weak_rows:
     if isinstance(worst, str):
         worst = json.loads(worst)
     data[cid]["wn"] = int(r["WEAK_N"] or 0)                       # total weak connections
-    data[cid]["wk"] = [{"d": w["d"], "v": int(w["v"])} for w in worst]   # worst 3: device + dBm
+    data[cid]["wk"] = [{"d": w["d"], "v": int(w["v"]), "a": (w.get("a") or "")}
+                       for w in worst]                            # worst 3: device + dBm + coarse area
     weak_csps += 1
 
 ist = datetime.now(timezone.utc) + timedelta(minutes=330)
