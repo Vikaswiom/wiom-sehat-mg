@@ -1,7 +1,9 @@
 -- Per Track-A CSP: the worst-first weak connections (out-of-range ONTs) for "आज ये ठीक करें".
 -- Source: DBT.HOURLY_DEVICE_PING_INFLUX (per-device optical, the doc's whom-to-treat basis).
 -- Weak = 15-day avg device optical below -25 dBm (calibrated: reproduces a0b6t9's ~49% in-range).
--- Identifier = DEVICE_ID (ONT serial on the router). No customer name/address → no PII in the public file.
+-- Identifier = DEVICE_ID (ONT serial on the router). No customer name/address -> no PII in the public file.
+-- FILTER: only CURRENT ACTIVE customers (PUBLIC.ACTIVE_CUST) -- the ping feed still lists devices
+-- that have since churned/removed; showing "go fix this" for a dead connection is wrong.
 WITH cohort AS (   -- Track-A CSPs (OP<75 at month start) mapped to their partner_id
   SELECT s.csp_id, a.partner_id
   FROM (
@@ -14,15 +16,16 @@ WITH cohort AS (   -- Track-A CSPs (OP<75 at month start) mapped to their partne
     ON a.csp_id = s.csp_id AND a._fivetran_active = TRUE
   WHERE s.rn = 1 AND s.op0 < 75
 ),
-dev AS (   -- 15-day avg optical per device, only for cohort partners
+dev AS (   -- 15-day avg optical per device, cohort partners, CURRENT ACTIVE customers only
   SELECT c.csp_id, p.device_id,
-         AVG(p.optical_avg)        AS opt,
-         SUM(p.total_pings_missed) AS missed
+         AVG(p.optical_avg) AS opt
   FROM cohort c
   JOIN PROD_DB.DBT.HOURLY_DEVICE_PING_INFLUX p
     ON p.partner_id = c.partner_id
    AND p.date_ist >= DATEADD(day, -15, CURRENT_DATE)
    AND p.optical_avg IS NOT NULL
+  JOIN PROD_DB.PUBLIC.ACTIVE_CUST ac        -- keep only live connections
+    ON ac.device_id = p.device_id
   GROUP BY c.csp_id, p.device_id
 ),
 ranked AS (
