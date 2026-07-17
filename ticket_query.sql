@@ -23,8 +23,9 @@ opn AS (   -- open SERVICE tickets, with a coarse area from the connection's ser
 ),
 ranked AS (
   SELECT csp_id, age_d,
-         COALESCE(locality || CASE WHEN place IS NOT NULL THEN ' · ' || place END, place, '') AS area,
-         ROW_NUMBER() OVER (PARTITION BY csp_id ORDER BY age_d DESC) AS rnk,   -- most overdue first
+         -- null-safe join: drops NULL parts, so 'Kala Kunj' with no city/pincode still shows
+         ARRAY_TO_STRING(ARRAY_CONSTRUCT_COMPACT(locality, place), ' · ') AS area,
+         ROW_NUMBER() OVER (PARTITION BY csp_id ORDER BY age_d DESC, complaint_id) AS rnk,  -- most overdue first, stable
          COUNT(*)     OVER (PARTITION BY csp_id)                    AS open_n
   FROM opn
 )

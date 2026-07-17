@@ -40,9 +40,9 @@ addr AS (
 ),
 ranked AS (
   SELECT d.csp_id, d.device_id, ROUND(d.opt, 0) AS dbm,
-         COALESCE(a.locality || CASE WHEN a.pincode IS NOT NULL THEN ' · ' || a.pincode END,
-                  a.pincode, '') AS area,
-         ROW_NUMBER() OVER (PARTITION BY d.csp_id ORDER BY d.opt ASC) AS rnk,
+         -- null-safe join: locality shows even when pincode is missing (and vice-versa)
+         ARRAY_TO_STRING(ARRAY_CONSTRUCT_COMPACT(a.locality, a.pincode), ' · ') AS area,
+         ROW_NUMBER() OVER (PARTITION BY d.csp_id ORDER BY d.opt ASC, d.device_id) AS rnk,
          COUNT_IF(d.opt < -25) OVER (PARTITION BY d.csp_id)           AS weak_n
   FROM dev d
   LEFT JOIN addr a ON a.device_id = d.device_id
