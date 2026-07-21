@@ -136,7 +136,7 @@ and **986 of 1,053 CSPs** get dumped into Track A. With the correct formula the 
 | % समय पर समाधान | `COMPLAINT_RESOLUTION_LEDGER` | `COUNT_IF(RESOLVED_WITHIN_TAT)/COUNT(*)×100` · `TAT_WINDOW_HOURS = 4` · each CSP's own **60**-day snapshot lookback (M3) |
 | Track A/B/U | `DAILY_METRIC_SNAPSHOTS` | Optical Power on the **1st of the month** · <75 → A · ≥75 → B · no telemetry → U |
 | Active connections | `DAILY_METRIC_SNAPSHOTS` | `ACTIVE_CONNECTION_COUNT` |
-| **Weak connections** (Track A "whom to treat") | `DBT.HOURLY_DEVICE_PING_INFLUX` + `PUBLIC.ACTIVE_CUST` | per-device 15-day avg `OPTICAL_AVG` below **−25 dBm** = out-of-range; worst-first. **Active customers only** (ping feed still lists churned devices). Join `CSP_ACCOUNT.partner_id`. `weak_query.sql` |
+| **Weak connections** (Track A "whom to treat") | `PUBLIC.HOURLY_DEVICE_PING_INFLUX` | per-device 15-day avg `OPTICAL_AVG` below **−25 dBm** = out-of-range; worst-first. **Liveness gate:** device must have pinged in the last 3 days (`HAVING MAX(date_ist)`), so churned/expired/offline ONTs drop off automatically. Join `CSP_ACCOUNT.partner_id`. `weak_query.sql` |
 | **Connection area** (shown under each ONT) | `DBT.T_WG_CUSTOMER.address` | neighbourhood + pincode only (2nd comma-segment of the formatted address), most-recent row. **No house no / name / phone** → no identifying PII in the public file |
 | **Open tickets** (Track B "समय से resolve करें") | `COMPLAINT_RESOLUTION_LEDGER` + `CONNECTIONS.service_address` | `resolved_at IS NULL` SERVICE tickets, **most-overdue first**, with coarse area + age(days). `ticket_query.sql` → `tn`/`tk` in data.json |
 
@@ -171,17 +171,18 @@ Metabase for the requested `cspId`. It returns the same raw shape; nothing else 
    when Growth confirms it should replace, not just annotate, the rolling number.
 2. **"Whom to treat" ONT list — live** (§7's "most valuable feature"). Track A's action card lists the
    CSP's worst-first out-of-range ONTs — **serial + neighbourhood·pincode + dBm** — from
-   `DBT.HOURLY_DEVICE_PING_INFLUX` (per-device `OPTICAL_AVG`), filtered to **current active customers**
-   (`ACTIVE_CUST`) so churned devices in the frozen feed don't appear. `weak_dbm_floor` (−25) is
-   calibrated so the in-range share reproduces the app's T1 (a0b6t9 ~49%). Caveats:
+   `PUBLIC.HOURLY_DEVICE_PING_INFLUX` (per-device `OPTICAL_AVG`, the **fresh** daily feed). A **liveness
+   gate** (`HAVING MAX(date_ist) >= today-3`) shows only devices that pinged in the last 3 days, so a
+   churned/expired/offline ONT drops off instead of showing its last historical reading. `weak_dbm_floor`
+   (−25) is calibrated so the in-range share reproduces the app's T1 (a0b6t9 ~49%). Caveats:
    - **PII / public page:** the area is deliberately coarse — **neighbourhood + pincode only, never house
-     number, name, or phone** — because `data.json` is world-readable. The reliable current locator would
-     be the customer name (`ACTIVE_CUST`); that and the full address belong behind auth in the `PROXY_URL`
-     app build, not on the open web.
-   - **Staleness:** both the optical feed (freshest Jul 3, ~2 wk lag) and the address (most-recent
-     `T_WG_CUSTOMER` row, sometimes 2025) can be behind — fine for a worst-first to-do list, not for
-     grading. The same serial can appear at more than one address (routers get reinstalled), so a coarse
-     area can occasionally be wrong.
+     number, name, or phone** — because `data.json` is world-readable. Full address/name belong behind auth
+     in the `PROXY_URL` app build, not on the open web.
+   - **History (fixed 2026-07-21):** originally sourced from `DBT.HOURLY_DEVICE_PING_INFLUX`, which FROZE on
+     Jul 3 — its rolling window then surfaced stale readings for inactive ONTs (a CSP saw SY053676, plan
+     expired Jun 29, no data since Jul 2, shown as a live weak connection). Root cause: that dbt/Fivetran
+     model stopped updating; `ACTIVE_CUST` also didn't reflect plan expiry. Switched to the fresh PUBLIC
+     feed + the liveness gate above. The grade % was never affected (it comes from `TELEMETRY_ROLLUP_RECORDS`).
 3. **No live open-ticket feed.** Every unresolved row in `COMPLAINT_RESOLUTION_LEDGER` is **7+ days
    old** (567 aged 7–30d, 432 over 30d, **zero** under 24h), so those are stale hygiene artifacts,
    not a work queue. Track B's action card is therefore built on the real breach count, not a fake

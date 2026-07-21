@@ -110,7 +110,8 @@ out = {
         "target_pct": 80,
         "track_split_pct": 75,
         "weak_dbm_floor": -25,
-        "weak_source": "PROD_DB.DBT.HOURLY_DEVICE_PING_INFLUX",
+        "weak_source": "PROD_DB.PUBLIC.HOURLY_DEVICE_PING_INFLUX",
+        "weak_liveness_days": 3,
     },
     "data": data,
 }
