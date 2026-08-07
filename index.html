@@ -269,11 +269,18 @@ function render(d, m){
   var actH, actS, actRows, actF;
   if (A){
     /* Generic for every Track-A CSP: send them into सेवा स्थिति, where the app
-       shows each CSP their own weak connections (worst-first) live. */
-    actH = '🔧 आज ये कनेक्शन ठीक करें';
-    actS = '';
-    actRows = '<button class="dlbtn" type="button" onclick="goDeep()">देखें कौन से कनेक्शन ठीक करने हैं →</button>';
-    actF = 'एक-एक ठीक करते ही ऑप्टिकल पॉवर अपने आप ऊपर जाएगा.';
+       shows each CSP their own connections live. Copy flips on the payout band —
+       green (>=80%, on track) gets a maintain message, below target gets fix-it. */
+    if (m.band === 'green'){
+      actH = '✅ ऑप्टिकल पॉवर बढ़िया है';
+      actS = 'आपके कनेक्शन का सिग्नल अच्छा है — साइकिल के आख़िर तक ऐसे ही बनाए रखें, ₹10,000 पक्का.';
+      actRows = '<button class="dlbtn" type="button" onclick="goDeep()">सेवा स्थिति में अपने कनेक्शन देखें →</button>';
+    } else {
+      actH = '🔧 आज ये कनेक्शन ठीक करें';
+      actS = '';
+      actRows = '<button class="dlbtn" type="button" onclick="goDeep()">देखें कौन से कनेक्शन ठीक करने हैं →</button>';
+    }
+    actF = '';
   } else {
     var tk = d.tk || [];
     if (tk.length){
