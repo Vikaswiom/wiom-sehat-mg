@@ -269,22 +269,29 @@ function _deepPath(){
   if (/Android/i.test(navigator.userAgent || '')) return 'android intent://';
   return 'https fallback (renders as web page)';
 }
+/* Append the current cspId to the deep link, in case the app / web app routes on it.
+   Native handoff doesn't need it (the app knows the logged-in CSP), and the web app
+   likely needs a real session not just an id — but it is harmless if ignored. */
+function deepUrl(){
+  var id=''; try{ id=(cspIdFromUrl()||'').toString().trim(); }catch(e){}
+  return DEEPLINK + (id ? ((DEEPLINK.indexOf('?')<0?'?':'&') + 'cspId=' + encodeURIComponent(id)) : '');
+}
 function goDeep(){
-  if (_dbg()){ try{ alert(_bridges().concat(['', 'WOULD FIRE -> ' + _deepPath()]).join('\n')); }catch(e){} return; }
+  var url = deepUrl();
+  if (_dbg()){ try{ alert(_bridges().concat(['', 'URL -> ' + url, 'WOULD FIRE -> ' + _deepPath()]).join('\n')); }catch(e){} return; }
   /* 1. custom scheme — set once the app registers one (opens the NATIVE screen everywhere) */
   try{ if (DEEPLINK_SCHEME){ window.location.href = DEEPLINK_SCHEME; return; } }catch(e){}
   /* 2. CleverTap bridge — present only when this page is shown as a CleverTap in-app */
   try{
-    if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(DEEPLINK); return; }
+    if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(url); return; }
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
-      window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
+      window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:url}); return;
     }
   }catch(e){}
   /* 3. Navigate to the सेवा स्थिति route. This ALWAYS lands (HTTP 200). Whether it opens
      the native screen or the web app depends on the app catching this URL in its WebView
-     (shouldOverrideUrlLoading / decidePolicyForNavigationAction) — that part is app-side.
-     NOTE: intent:// was removed — this app's WebView doesn't handle it, so it dead-ended. */
-  try{ window.location.href = DEEPLINK; }catch(e){}
+     (shouldOverrideUrlLoading / decidePolicyForNavigationAction) — that part is app-side. */
+  try{ window.location.href = url; }catch(e){}
 }
 
 function render(d, m){
