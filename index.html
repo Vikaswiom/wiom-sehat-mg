@@ -234,10 +234,14 @@ function step(i,t,s){ return '<div class="step"><span class="n">'+i+'</span><spa
 function row(t,s,c,warn){ return '<div class="tkt"><span class="tn">'+t+'<br><em>'+s+'</em></span><span class="tc'+(warn?' warn':'')+'">'+c+'</span></div>'; }
 function faq(a){ return a.map(function(f){ return '<details><summary>'+f[0]+'<span class="cv">+</span></summary>'+f[1]+'</details>'; }).join(''); }
 
-/* Sewa Sthiti / Quality drilldown — verified App Link (assetlinks.json for csp.wiom.in
-   delegates handle_all_urls to com.wiom.csp). Bridge first (inside the app WebView),
-   https fallback so a plain browser still opens/deep-links. Do NOT use www.csp.wiom.in. */
+/* Sewa Sthiti / Quality drilldown. App Link host = csp.wiom.in (assetlinks.json
+   delegates to com.wiom.csp; www.csp.wiom.in does NOT resolve). A plain https URL
+   set on location.href inside a WebView just RE-RENDERS as a web page — it does
+   NOT hand off to the app. So on Android we use an intent:// URL, which forces the
+   OS to open the app; iOS/browser fall back to the https App Link. Bridge first
+   for when the page is shown as a CleverTap in-app (bridge injected). */
 var DEEPLINK = 'https://csp.wiom.in/assurance/quality';
+var DEEPLINK_INTENT = 'intent://csp.wiom.in/assurance/quality#Intent;scheme=https;package=com.wiom.csp;S.browser_fallback_url=' + encodeURIComponent(DEEPLINK) + ';end';
 function goDeep(){
   try{
     if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(DEEPLINK); return; }
@@ -245,6 +249,7 @@ function goDeep(){
       window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
     }
   }catch(e){}
+  try{ if (/Android/i.test(navigator.userAgent || '')){ window.location.href = DEEPLINK_INTENT; return; } }catch(e){}
   try{ window.location.href = DEEPLINK; }catch(e){}
 }
 
