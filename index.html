@@ -249,7 +249,28 @@ var DEEPLINK = 'https://csp.wiom.in/assurance/quality';
    screen. Leave '' until confirmed. */
 var DEEPLINK_SCHEME = '';
 var DEEPLINK_INTENT = 'intent://csp.wiom.in/assurance/quality#Intent;scheme=https;package=com.wiom.csp;S.browser_fallback_url=' + encodeURIComponent(DEEPLINK) + ';end';
+
+/* Diagnostic: open the page with ?dbg=1 and tap the button — it lists which native
+   bridges the app injected into this WebView + which handoff path would fire, WITHOUT
+   navigating. That tells us the one working call to wire. Remove once resolved. */
+function _dbg(){ try{ return /[?&]dbg=1/.test(location.search); }catch(e){ return false; } }
+function _bridges(){
+  var L = ['UA: ' + navigator.userAgent];
+  L.push('CleverTap: ' + (window.CleverTap ? ('YES {' + Object.keys(window.CleverTap).join(',') + '}') : 'no'));
+  try{ L.push('webkit.messageHandlers: ' + ((window.webkit && window.webkit.messageHandlers) ? ('YES {' + Object.keys(window.webkit.messageHandlers).join(',') + '}') : 'no')); }catch(e){ L.push('webkit: err'); }
+  var names = ['Android','WiomApp','WiomBridge','JSBridge','NativeBridge','AndroidBridge','CSPApp','flutter_inappwebview','ReactNativeWebView','Mobile','app'];
+  for (var i=0;i<names.length;i++){ try{ var o=window[names[i]]; if (o!=null){ L.push(names[i] + ': YES ' + (typeof o==='object' ? ('{' + Object.keys(o).slice(0,30).join(',') + '}') : typeof o)); } }catch(e){} }
+  return L;
+}
+function _deepPath(){
+  if (DEEPLINK_SCHEME) return 'custom-scheme (' + DEEPLINK_SCHEME + ')';
+  if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function') return 'CleverTap.openDeepLink';
+  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap) return 'webkit.clevertap.openDeepLink';
+  if (/Android/i.test(navigator.userAgent || '')) return 'android intent://';
+  return 'https fallback (renders as web page)';
+}
 function goDeep(){
+  if (_dbg()){ try{ alert(_bridges().concat(['', 'WOULD FIRE -> ' + _deepPath()]).join('\n')); }catch(e){} return; }
   /* 1. custom scheme first — most reliable from a plain WebView, both platforms */
   try{ if (DEEPLINK_SCHEME){ window.location.href = DEEPLINK_SCHEME; return; } }catch(e){}
   /* 2. CleverTap bridge — only present when this page is shown as a CleverTap in-app */
@@ -259,7 +280,7 @@ function goDeep(){
       window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
     }
   }catch(e){}
-  /* 3. Android intent:// — forces a native Intent from a plain WebView */
+  /* 3. Android intent:// — forces a native Intent from a plain WebView (needs the app's WebViewClient to catch intent://) */
   try{ if (/Android/i.test(navigator.userAgent || '')){ window.location.href = DEEPLINK_INTENT; return; } }catch(e){}
   /* 4. plain App Link — browser works; inside a WebView this degrades to a web page */
   try{ window.location.href = DEEPLINK; }catch(e){}
