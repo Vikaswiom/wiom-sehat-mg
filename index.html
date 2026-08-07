@@ -241,15 +241,27 @@ function faq(a){ return a.map(function(f){ return '<details><summary>'+f[0]+'<sp
    OS to open the app; iOS/browser fall back to the https App Link. Bridge first
    for when the page is shown as a CleverTap in-app (bridge injected). */
 var DEEPLINK = 'https://csp.wiom.in/assurance/quality';
+/* APP TEAM: set this to the custom scheme the CSP app registers for the सेवा स्थिति
+   / quality screen, e.g. 'wiom://assurance/quality'. A plain WebView (which is how
+   this page loads inside the app) CANNOT load a custom scheme, so it is forced to
+   hand off to the app — the only path that reliably opens the NATIVE screen on both
+   Android and iOS. The app must (1) register the scheme AND (2) route it to that
+   screen. Leave '' until confirmed. */
+var DEEPLINK_SCHEME = '';
 var DEEPLINK_INTENT = 'intent://csp.wiom.in/assurance/quality#Intent;scheme=https;package=com.wiom.csp;S.browser_fallback_url=' + encodeURIComponent(DEEPLINK) + ';end';
 function goDeep(){
+  /* 1. custom scheme first — most reliable from a plain WebView, both platforms */
+  try{ if (DEEPLINK_SCHEME){ window.location.href = DEEPLINK_SCHEME; return; } }catch(e){}
+  /* 2. CleverTap bridge — only present when this page is shown as a CleverTap in-app */
   try{
     if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(DEEPLINK); return; }
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
       window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
     }
   }catch(e){}
+  /* 3. Android intent:// — forces a native Intent from a plain WebView */
   try{ if (/Android/i.test(navigator.userAgent || '')){ window.location.href = DEEPLINK_INTENT; return; } }catch(e){}
+  /* 4. plain App Link — browser works; inside a WebView this degrades to a web page */
   try{ window.location.href = DEEPLINK; }catch(e){}
 }
 
