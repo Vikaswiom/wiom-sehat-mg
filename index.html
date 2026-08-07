@@ -271,18 +271,19 @@ function _deepPath(){
 }
 function goDeep(){
   if (_dbg()){ try{ alert(_bridges().concat(['', 'WOULD FIRE -> ' + _deepPath()]).join('\n')); }catch(e){} return; }
-  /* 1. custom scheme first — most reliable from a plain WebView, both platforms */
+  /* 1. custom scheme — set once the app registers one (opens the NATIVE screen everywhere) */
   try{ if (DEEPLINK_SCHEME){ window.location.href = DEEPLINK_SCHEME; return; } }catch(e){}
-  /* 2. CleverTap bridge — only present when this page is shown as a CleverTap in-app */
+  /* 2. CleverTap bridge — present only when this page is shown as a CleverTap in-app */
   try{
     if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(DEEPLINK); return; }
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
       window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
     }
   }catch(e){}
-  /* 3. Android intent:// — forces a native Intent from a plain WebView (needs the app's WebViewClient to catch intent://) */
-  try{ if (/Android/i.test(navigator.userAgent || '')){ window.location.href = DEEPLINK_INTENT; return; } }catch(e){}
-  /* 4. plain App Link — browser works; inside a WebView this degrades to a web page */
+  /* 3. Navigate to the सेवा स्थिति route. This ALWAYS lands (HTTP 200). Whether it opens
+     the native screen or the web app depends on the app catching this URL in its WebView
+     (shouldOverrideUrlLoading / decidePolicyForNavigationAction) — that part is app-side.
+     NOTE: intent:// was removed — this app's WebView doesn't handle it, so it dead-ended. */
   try{ window.location.href = DEEPLINK; }catch(e){}
 }
 
