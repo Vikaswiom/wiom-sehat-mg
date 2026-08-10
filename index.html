@@ -234,64 +234,19 @@ function step(i,t,s){ return '<div class="step"><span class="n">'+i+'</span><spa
 function row(t,s,c,warn){ return '<div class="tkt"><span class="tn">'+t+'<br><em>'+s+'</em></span><span class="tc'+(warn?' warn':'')+'">'+c+'</span></div>'; }
 function faq(a){ return a.map(function(f){ return '<details><summary>'+f[0]+'<span class="cv">+</span></summary>'+f[1]+'</details>'; }).join(''); }
 
-/* Sewa Sthiti / Quality drilldown. App Link host = csp.wiom.in (assetlinks.json
-   delegates to com.wiom.csp; www.csp.wiom.in does NOT resolve). A plain https URL
-   set on location.href inside a WebView just RE-RENDERS as a web page — it does
-   NOT hand off to the app. So on Android we use an intent:// URL, which forces the
-   OS to open the app; iOS/browser fall back to the https App Link. Bridge first
-   for when the page is shown as a CleverTap in-app (bridge injected). */
+/* Sewa Sthiti / Quality drilldown. The CSP app's WebView intercepts this URL and
+   opens the native सेवा स्थिति screen (app-side routing, live since Aug 2026).
+   Try the CleverTap bridge first for the in-app-notification case; otherwise just
+   navigate and the app catches it. Bare URL — the app resolves the logged-in CSP. */
 var DEEPLINK = 'https://csp.wiom.in/assurance/quality';
-/* APP TEAM: set this to the custom scheme the CSP app registers for the सेवा स्थिति
-   / quality screen, e.g. 'wiom://assurance/quality'. A plain WebView (which is how
-   this page loads inside the app) CANNOT load a custom scheme, so it is forced to
-   hand off to the app — the only path that reliably opens the NATIVE screen on both
-   Android and iOS. The app must (1) register the scheme AND (2) route it to that
-   screen. Leave '' until confirmed. */
-var DEEPLINK_SCHEME = '';
-var DEEPLINK_INTENT = 'intent://csp.wiom.in/assurance/quality#Intent;scheme=https;package=com.wiom.csp;S.browser_fallback_url=' + encodeURIComponent(DEEPLINK) + ';end';
-
-/* Diagnostic: open the page with ?dbg=1 and tap the button — it lists which native
-   bridges the app injected into this WebView + which handoff path would fire, WITHOUT
-   navigating. That tells us the one working call to wire. Remove once resolved. */
-function _dbg(){ try{ return /[?&]dbg=1/.test(location.search); }catch(e){ return false; } }
-function _bridges(){
-  var L = ['UA: ' + navigator.userAgent];
-  L.push('CleverTap: ' + (window.CleverTap ? ('YES {' + Object.keys(window.CleverTap).join(',') + '}') : 'no'));
-  try{ L.push('webkit.messageHandlers: ' + ((window.webkit && window.webkit.messageHandlers) ? ('YES {' + Object.keys(window.webkit.messageHandlers).join(',') + '}') : 'no')); }catch(e){ L.push('webkit: err'); }
-  var names = ['Android','WiomApp','WiomBridge','JSBridge','NativeBridge','AndroidBridge','CSPApp','flutter_inappwebview','ReactNativeWebView','Mobile','app'];
-  for (var i=0;i<names.length;i++){ try{ var o=window[names[i]]; if (o!=null){ L.push(names[i] + ': YES ' + (typeof o==='object' ? ('{' + Object.keys(o).slice(0,30).join(',') + '}') : typeof o)); } }catch(e){} }
-  return L;
-}
-function _deepPath(){
-  if (DEEPLINK_SCHEME) return 'custom-scheme (' + DEEPLINK_SCHEME + ')';
-  if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function') return 'CleverTap.openDeepLink';
-  if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap) return 'webkit.clevertap.openDeepLink';
-  if (/Android/i.test(navigator.userAgent || '')) return 'android intent://';
-  return 'https fallback (renders as web page)';
-}
-/* Append the current cspId to the deep link, in case the app / web app routes on it.
-   Native handoff doesn't need it (the app knows the logged-in CSP), and the web app
-   likely needs a real session not just an id — but it is harmless if ignored. */
-function deepUrl(){
-  var id=''; try{ id=(cspIdFromUrl()||'').toString().trim(); }catch(e){}
-  return DEEPLINK + (id ? ((DEEPLINK.indexOf('?')<0?'?':'&') + 'cspId=' + encodeURIComponent(id)) : '');
-}
 function goDeep(){
-  var url = deepUrl();
-  if (_dbg()){ try{ alert(_bridges().concat(['', 'URL -> ' + url, 'WOULD FIRE -> ' + _deepPath()]).join('\n')); }catch(e){} return; }
-  /* 1. custom scheme — set once the app registers one (opens the NATIVE screen everywhere) */
-  try{ if (DEEPLINK_SCHEME){ window.location.href = DEEPLINK_SCHEME; return; } }catch(e){}
-  /* 2. CleverTap bridge — present only when this page is shown as a CleverTap in-app */
   try{
-    if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(url); return; }
+    if (window.CleverTap && typeof window.CleverTap.openDeepLink === 'function'){ window.CleverTap.openDeepLink(DEEPLINK); return; }
     if (window.webkit && window.webkit.messageHandlers && window.webkit.messageHandlers.clevertap){
-      window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:url}); return;
+      window.webkit.messageHandlers.clevertap.postMessage({action:'openDeepLink', url:DEEPLINK}); return;
     }
   }catch(e){}
-  /* 3. Navigate to the सेवा स्थिति route. This ALWAYS lands (HTTP 200). Whether it opens
-     the native screen or the web app depends on the app catching this URL in its WebView
-     (shouldOverrideUrlLoading / decidePolicyForNavigationAction) — that part is app-side. */
-  try{ window.location.href = url; }catch(e){}
+  try{ window.location.href = DEEPLINK; }catch(e){}
 }
 
 function render(d, m){
