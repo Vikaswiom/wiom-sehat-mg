@@ -3,9 +3,30 @@
 The CSP-facing screen for **Sehat MG**: the ₹10,000/month guarantee for active CSPs who are **not eligible for Install MG**. They earn it by keeping their **network healthy** instead of by installing connections.
 
 **Live:** https://vikaswiom.github.io/wiom-sehat-mg/?cspId=a0b6t9
+**Settlement (cycle-end report card):** https://vikaswiom.github.io/wiom-sehat-mg/settle.html?cspId=a0b6t9 · all cases: [`settle.html?demo=1`](https://vikaswiom.github.io/wiom-sehat-mg/settle.html?demo=1)
 
 Design system, card rhythm and copy register are inherited verbatim from
 [wiom-mbg-kamai-kavach](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/).
+
+### settle.html — the cycle-end report card
+
+The Sehat twin of the Kamai Kavach [`settle.html`](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/settle.html)
+(that file is the design model and is untouched). Opened on/after the 16th it settles the cycle that
+just ended (16th → 15th) and shows the Day-1 payout verdict, graded on the **CSP's own track** (`tr`),
+never the deployment:
+
+| Case | Verdict |
+|---|---|
+| ≥ 80% on the track's metric | 🟢 **₹10,000** — paid with the Install-MG run on the 16th |
+| 75–79% | 🟠 "बस X% रह गया" — ₹0, no deduction, no blame |
+| < 75% | 🟠 honest miss — ₹0, install/service pay explicitly safe |
+| Track B, zero complaints in window | 🟣 nothing to grade → guarantee held, ₹10,000 *(the Kamai Kavach "noleads" precedent — **confirm with Growth**)* |
+| Track A, no telemetry | "हिसाब तैयार नहीं" — helpline |
+
+Same id plumbing and `data.json` contract as the daily tile; `?demo=1` (or no id) previews every
+case; `?case=apass|anear|amiss|bpass|bnear|bmiss|bnone|upass` deep-links one. Grades on the same
+rolling windows the daily tile shows (15-day OP / 60-day SLA) until the spec's month-end aggregates
+(last 5/15 days) are baked into `data.json` — Known gap 1.
 
 Logic audited against the program note `Sehat_MG_Quality_Program.html` (Version 2.0, July 2026).
 Every case below matches the spec; deviations are called out in **Known gaps**.
