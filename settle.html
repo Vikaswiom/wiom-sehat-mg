@@ -207,7 +207,7 @@ function render(d){
   var need = m.val == null       ? 'गिनने को शिकायत ही नहीं थी'
            : m.kase === 'pass'   ? '✓ 80% पार — वादा पूरा'
            : m.kase === 'near'   ? 'बस '+m.gap+'% रह गया'
-           :                       '80% से '+m.gap+'% दूर रह गया';
+           :                       '80% से '+m.gap+'% दूर रह गए';
   var standHTML = m.val == null
     ? '<div class="card f-green"><div class="k">आप कहाँ बंद हुए</div>'+
         '<div class="wyh-need" style="margin-top:6px">'+need+'</div>'+
