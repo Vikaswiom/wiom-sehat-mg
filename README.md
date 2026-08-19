@@ -12,21 +12,35 @@ Design system, card rhythm and copy register are inherited verbatim from
 
 The Sehat twin of the Kamai Kavach [`settle.html`](https://vikaswiom.github.io/wiom-mbg-kamai-kavach/settle.html)
 (that file is the design model and is untouched). Opened on/after the 16th it settles the cycle that
-just ended (16th → 15th) and shows the Day-1 payout verdict, graded on the **CSP's own track** (`tr`),
-never the deployment:
+just ended (16th → 15th) with the Day-1 payout verdict.
 
-| Case | Verdict |
+For a settled cycle the **official payout table baked into the page** (`CYCLE1` — the 16 Jul–15 Aug
+run: 78 enrolled, 16 paid, ₹1,57,095) is the single source of truth, never the rolling estimate.
+Every CSP is rendered strictly on their **enrolled category** (`rec.c`) — an Optical CSP always sees
+ऑप्टिकल पॉवर, a Service CSP always sees समय पर समाधान, **no mixing**, regardless of which deployment
+opened the page or what today's re-locked track says (3 winners' current track differs from their
+enrolled category; Tirth Digital, the no-telemetry CSP, is enrolled & paid as Service SLA).
+
+**Gates (verified against the run):** Optical → 15-Aug cycle-close reading ≥ 80 · Service SLA →
+**SLA on complaints opened in the cycle** (`ic`) ≥ 80 — the 60-day rolling number can close below 80
+and the CSP still wins (3 of 16 did; the card explains the difference). **Payout is pro-rata** by
+opt-in date: days enrolled ÷ 31 × ₹10,000 (₹9,677 / ₹9,355 / ₹9,032), with a Kamai-style
+"पूरे ₹10,000 क्यों नहीं?" day-count card.
+
+| Case (comms group) | Verdict card |
 |---|---|
-| ≥ 80% on the track's metric | 🟢 **₹10,000** — paid with the Install-MG run on the 16th |
-| 75–79% | 🟠 "बस X% रह गया" — ₹0, no deduction, no blame |
-| < 75% | 🟠 honest miss — ₹0, install/service pay explicitly safe |
-| Track B, zero complaints in window | 🟣 nothing to grade → guarantee held, ₹10,000 *(the Kamai Kavach "noleads" precedent — **confirm with Growth**)* |
-| Track A, no telemetry | "हिसाब तैयार नहीं" — helpline |
+| 1 · Paid | 🟢 "बधाई हो — ₹X पक्का" + pro-rata card when day-counted |
+| 3 · At the door | 🟠 "बस X% रह गया" — ₹0, no deduction |
+| 4 · Improved, not paid | 🟠 "+X pts सुधरे 📈" — praise the climb, ₹0 |
+| 5 · Held / declined | 🟠 honest miss — ₹0, install/service pay explicitly safe |
+| Not in the table | 🟣 "आप इस साइकिल शामिल नहीं थे" — info only, **no ₹ ever promised** |
 
-Same id plumbing and `data.json` contract as the daily tile; `?demo=1` (or no id) previews every
-case; `?case=apass|anear|amiss|bpass|bnear|bmiss|bnone|upass` deep-links one. Grades on the same
-rolling windows the daily tile shows (15-day OP / 60-day SLA) until the spec's month-end aggregates
-(last 5/15 days) are baked into `data.json` — Known gap 1.
+Every ₹0/info card still shows the 16-Jul → 15-Aug movement line. Same id plumbing and `data.json`
+contract as the daily tile; `?demo=1` (or no id) previews every case;
+`?case=paidfull|paidpro|paidic|door|improved|held|unenr` deep-links one. A cycle with no baked table
+yet (next cycle until its run lands) falls back to the rolling estimate and says the final payout
+run confirms it — replace `CYCLE1` with each run's table (or move it to a `settle-data.json` once
+the payout pipeline writes one).
 
 Logic audited against the program note `Sehat_MG_Quality_Program.html` (Version 2.0, July 2026).
 Every case below matches the spec; deviations are called out in **Known gaps**.
